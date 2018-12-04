@@ -1,0 +1,9 @@
+subjectID	stimName	runtrial	subjectAnswerArousal	onsettime_Aro	RT_Arousal	StimNum	Rank
+subject_062	zuabi_hanin.jpg	1	9	1.473052e-02	1.556116e+01	8.000000	30	
+subject_062	Smotrich_Bezalel.jpg	2	9	1.713194e+01	2.563928e+00	3.000000	3	
+subject_062	olmert_ehud.jpg	3	6	2.124874e+01	4.759049e+00	6.000000	28	
+subject_062	tibi_ahmed.jpg	4	9	2.756561e+01	1.234184e+00	7.000000	29	
+subject_062	katzav_moshe.jpg	5	7	3.034903e+01	2.594700e+00	5.000000	27	
+subject_062	benet_naftali.jpg	6	9	3.449920e+01	1.452496e+00	1.000000	1	
+subject_062	shaked_ayelet.jpg	7	9	3.749931e+01	1.068320e+00	2.000000	2	
+subject_062	netanyahu.jpg	8	9	4.011601e+01	1.227618e+00	4.000000	4	

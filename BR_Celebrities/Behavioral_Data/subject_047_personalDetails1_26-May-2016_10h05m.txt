@@ -1,0 +1,2 @@
+subjectID	order	date	gender(1-female, 2-male)	age	dominant hand (1-right, 2-left)	occupation
+subject_047	1	26-May-2016_10h05m	1	20	2	same as 47

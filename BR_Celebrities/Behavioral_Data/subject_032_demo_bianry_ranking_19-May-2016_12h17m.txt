@@ -1,0 +1,9 @@
+subjectID	runtrial	onsettime	ImageLeft	ImageRight	StimNumLeft	StimNumRight	Response	Outcome	RT
+subject_032	1	5.144008e-01	Hugh.jpg	Lisa.jpg	3	6	u	0	2.214363e+03
+subject_032	2	4.014526e+00	Jake.jpg	Robin.jpg	4	8	u	0	1.458180e+03
+subject_032	3	7.514619e+00	Jeniffer.jpg	Emma.jpg	5	2	i	0	1.654008e+03
+subject_032	4	1.101472e+01	Mila.jpg	David.jpg	7	1	i	0	1.449843e+03
+subject_032	5	1.451481e+01	Emma.jpg	Robin.jpg	2	8	u	0	1.149684e+03
+subject_032	6	1.801492e+01	Jeniffer.jpg	Mila.jpg	5	7	i	0	9.295120e+02
+subject_032	7	2.151502e+01	David.jpg	Lisa.jpg	1	6	u	0	1.197330e+03
+subject_032	8	2.501512e+01	Jake.jpg	Hugh.jpg	4	3	i	0	1.529152e+03

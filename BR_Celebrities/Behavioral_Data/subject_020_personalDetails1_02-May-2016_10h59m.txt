@@ -1,0 +1,2 @@
+subjectID	order	date	gender(1-female, 2-male)	age	dominant hand (1-right, 2-left)	occupation
+subject_020	2	02-May-2016_10h59m	1	18	1	student of psychology

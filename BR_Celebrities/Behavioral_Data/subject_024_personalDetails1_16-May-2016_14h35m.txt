@@ -1,0 +1,2 @@
+subjectID	order	date	gender(1-female, 2-male)	age	dominant hand (1-right, 2-left)	occupation
+subject_024	2	16-May-2016_14h35m	2	24	1	student for psycholegy and computer science

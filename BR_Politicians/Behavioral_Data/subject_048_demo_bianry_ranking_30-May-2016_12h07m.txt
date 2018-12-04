@@ -1,0 +1,5 @@
+subjectID	runtrial	onsettime	ImageLeft	ImageRight	StimNumLeft	StimNumRight	Response	Outcome	RT
+subject_048	1	5.310631e-01	german_yael.jpg.jpg	benet_naftali.jpg.jpg	6	3	x	999	999000
+subject_048	2	4.031138e+00	cahlon_moshe.jpg.jpg	livnee_zipi.jpg.jpg	4	8	i	0	1.555835e+03
+subject_048	3	7.531213e+00	galon_zahava.jpg.jpg	beneliezer_binyamin.jpg.jpg	5	2	u	0	1.135714e+03
+subject_048	4	1.103132e+01	livnat_limor.jpg.jpg	barak_ehud.jpg.jpg	7	1	i	0	1.339502e+03
