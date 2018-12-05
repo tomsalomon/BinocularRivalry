@@ -3,11 +3,6 @@ function [valid_subjects,invalid_subjects]=SubjectsValidity(data,visualize)
 % Define these variables
 analysis_path = pwd;
 data_path = [analysis_path,'/processed_data'];
-% define boundries to exclude based on subjetive rating
-Threshold_upper_Aro = 10;
-Threshold_lower_Aro = 0;
-Threshold_upper_Val = 10;
-Threshold_lower_Val = 0;
 MinimalProp = .75; % minimal valid trials required per condition
 num_ok_corrupted_conditions = 0; % how many conditions can be corrupted befor a subject is excluded
 
@@ -26,37 +21,10 @@ end
 if ~exist('visualize','var')
     visualize = 1;
 end
-data.InvalidRank_stim1=zeros(size(data(:,1)));
-data.InvalidRank_stim2=zeros(size(data(:,1)));
 
-% Invalid trials due to inapropriate emotion ranking:
-data.InvalidRank_stim1(data.Delta_Aro==1 & data.Aro1_Ranking<Threshold_lower_Aro)=1;
-data.InvalidRank_stim1(data.Delta_Aro==-1 & data.Aro1_Ranking>Threshold_upper_Aro)=1;
-data.InvalidRank_stim1(data.Delta_Aro==0 & data.IsHighAro==0 & data.Aro1_Ranking>Threshold_upper_Aro)=1;
-data.InvalidRank_stim1(data.Delta_Aro==0 & data.IsHighAro==1 & data.Aro1_Ranking<Threshold_lower_Aro)=1;
-
-data.InvalidRank_stim2(data.Delta_Aro==1 & data.Aro2_Ranking>Threshold_upper_Aro)=1;
-data.InvalidRank_stim2(data.Delta_Aro==-1 & data.Aro2_Ranking<Threshold_lower_Aro)=1;
-data.InvalidRank_stim2(data.Delta_Aro==0 & data.IsHighAro==0 & data.Aro2_Ranking>Threshold_upper_Aro)=1;
-data.InvalidRank_stim2(data.Delta_Aro==0 & data.IsHighAro==1 & data.Aro2_Ranking<Threshold_lower_Aro)=1;
-
-data.InvalidRank_stim1(data.Delta_Val==1 & data.Val1_Ranking<Threshold_lower_Val)=1;
-data.InvalidRank_stim1(data.Delta_Val==-1 & data.Val1_Ranking>Threshold_upper_Val)=1;
-data.InvalidRank_stim1(data.Delta_Val==0 & data.IsHighVal==0 & data.Val1_Ranking>Threshold_upper_Val)=1;
-data.InvalidRank_stim1(data.Delta_Val==0 & data.IsHighVal==1 & data.Val1_Ranking<Threshold_lower_Val)=1;
-
-data.InvalidRank_stim2(data.Delta_Val==1 & data.Val2_Ranking>Threshold_upper_Val)=1;
-data.InvalidRank_stim2(data.Delta_Val==-1 & data.Val2_Ranking<Threshold_lower_Val)=1;
-data.InvalidRank_stim2(data.Delta_Val==0 & data.IsHighVal==0 & data.Val2_Ranking>Threshold_upper_Val)=1;
-data.InvalidRank_stim2(data.Delta_Val==0 & data.IsHighVal==1 & data.Val2_Ranking<Threshold_lower_Val)=1;
-
-data.ValidTrial=ones(size(data(:,1)));
-data.AllFusion=data.Stim1Time+data.Stim2Time==0;
-% Don't exclude all fusion trials
-% data.ValidTrial(data.IsCorrupted|data.InvalidRank_stim1|data.InvalidRank_stim2)=0;
-% Exclude all fusion trials
-data.ValidTrial(data.IsCorrupted|data.AllFusion|data.InvalidRank_stim1|data.InvalidRank_stim2)=0;
-
+data.AllFusion=data.Stim1Time+data.Stim2Time==0; % Exclude all fusion trials
+data.ValidTrial = ~(data.IsCorrupted|data.AllFusion);
+% Define trial type for experiment 3 with IAPS
 data.trialtype=ones(size(data(:,1))); % assign trial 1 for Exp. 1-2
 data.trialtype(data.Delta_Aro==0 & data.IsHighAro==1) = 1; % High Arousal - Different Valence
 data.trialtype(data.Delta_Aro==0 & data.IsHighAro==0) = 2; % Low Arousal - Different Valence
@@ -87,7 +55,7 @@ if visualize
     figure
     summary_valid(:,7)=min(summary_valid(:,2:num_trialtypes+1),[],2); % minimal proportion of valid trials per condition
     histogram(summary_valid(summary_valid(:,6)==1,7),num_trials_per_condition,'BinWidth',1/num_trials_per_condition);
-        xlim([0,1])
+    xlim([0,1])
     hold on
     histogram(summary_valid(summary_valid(:,6)==0,7),num_trials_per_condition,'BinWidth',1/num_trials_per_condition);
     hold off
@@ -97,3 +65,9 @@ if visualize
 end
 valid_subjects=summary_valid(summary_valid(:,6)==1,1);
 invalid_subjects=summary_valid(summary_valid(:,6)==0,1);
+if exist('data_file', 'var')
+    output_file_path = [data_file(1:strfind(data_file,'.')-1),'_valid_subjects.txt'];
+    csvwrite(fullfile(data_path,output_file_path),valid_subjects)
+end
+
+end
