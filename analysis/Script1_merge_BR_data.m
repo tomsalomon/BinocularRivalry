@@ -20,7 +20,7 @@
 %% Initialize code - define paths and pre-allocation
 clear;
 % Define these variables
-experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 1; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 num_of_trials=64; % number of trials in experiment (64 in all three experiments)
 
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
@@ -148,7 +148,8 @@ for sub_i= 1:length(subjects)
         events_after_stim2_onset = trial_data( [0;trial_data(1:end-1,5)]==1, 2);
         %In all cases the event after stim onset is not its offset or the trial offset, this is a corrupted trial (simoultaneous pressing or unidentified keypress)
         valid_events = [ismember(events_after_stim1_onset,[BR_event.stim1_end,BR_event.trial_end]);...
-            ismember(events_after_stim2_onset,[BR_event.stim2_end,BR_event.trial_end])];
+            ismember(events_after_stim2_onset,[BR_event.stim2_end,BR_event.trial_end]);...
+            ismember(trial_data(:,2),struct2array(BR_event))];
         is_corrupted_trial = ~all(valid_events);
         if is_corrupted_trial
             [stim1_time,stim2_time,fusion_time,initial_stim_is_Stim1] = deal(nan);
