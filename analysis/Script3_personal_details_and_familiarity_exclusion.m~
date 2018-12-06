@@ -20,6 +20,7 @@
 %% Initialize code - define paths and pre-allocation
 clear;
 
+warning('off');
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
 familiarity_thresh = [40, 30]; % minimal number of familiar faces to be included in the experiment
 analysis_path=pwd;
@@ -58,9 +59,8 @@ for experiment_num = 1:2
     data.is_valid = is_valid;
     
     fprintf('\n%s\n==================\n',experiment_name)
-        fprintf('Valid n = %i\n',sum(data.is_valid))
-        fprintf('Total participated = %i; Excluded for familiarity = %i;  \n',sum(data.is_valid))
-
-            fprintf('Valid n = %i\n',sum(data.is_valid))
-
+    fprintf('Valid n = %i; Total participated n = %i\n',sum(data.is_valid),numel(data.is_valid))
+    fprintf('Excluded for familiarity n = %i; Excluded for under 75%% valid trials n = %i\n',sum(data.excluded_for_familiarity), sum(data.excluded_for_corruption))
+    fprintf('Excluded for familiarity n = %i; Excluded for under 75%% valid trials n = %i\n',sum(data.excluded_for_familiarity), sum(data.excluded_for_corruption))
 end
+warning('on');

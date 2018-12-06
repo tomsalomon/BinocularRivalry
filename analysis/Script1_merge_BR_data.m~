@@ -44,7 +44,7 @@ subjects={BR_raw_data_struct.name}; % cell array with all folders
 % pre-allocation
 Data_mat=nan(num_of_trials*length(subjects),20); % mat where numerical results will be written
 experiment_data=cell(length(subjects),num_of_trials); % cell array where raw BR data will be stored
-stimuli_pairs=cell(length(subjects),1); % cell array where the names of stimuli will be stored
+stimuli_pairs=cell(length(subjects),1); % cell array where the names of stimuli will be stored 
 names1=cell(length(Data_mat(:,1)),1);
 names2=cell(length(Data_mat(:,1)),1);
 
@@ -55,7 +55,7 @@ for sub_i= 1:length(subjects)  % running subject. notice: subject's ID is not su
     subject_with_date = subject_dir.name; %subject name and date for full path
     subject_path= [subject_dir.folder,'/',subject_with_date,'/'];
     [~,~,BR_params_default] = xlsread([subject_path,'from laptop/BR_params_default.xlsx'],'Pairs'); % read excel with info about the stimuli in each trial
-    BR_params = cell2table(BR_params_default(2:end,:),'VariableName',BR_params_default(1,:));
+    BR_params = cell2table(BR_params_default(2:end,:),'VariableName',BR_params_default(1,:)); 
     stimuli_pairs{sub_i} = BR_params;
     clear('subject_data');
     try
@@ -65,8 +65,11 @@ for sub_i= 1:length(subjects)  % running subject. notice: subject's ID is not su
         excel_files = dir([subject_path,'/from laptop/rivalry_pair_*.xlsx']); %lists files in subject's folder
         for excel_Ind=1:numel(excel_files) %going through the excel files (24/48/64...)
             excel_file = [excel_files(excel_Ind).folder,'/',excel_files(excel_Ind).name];
-            % experiment_data{sub_i,excel_Ind} = xlsread(excel_file,'Default');
-            experiment_data{sub_i,excel_Ind} = table2array(readtable(excel_file));
+            try
+            experiment_data{sub_i,excel_Ind} = xlsread(excel_file,'Default');
+            catch
+                experiment_data{sub_i,excel_Ind} = readtable(excel_file);
+            end
             experiment_data{sub_i,excel_Ind}(:,3)=[diff(experiment_data{sub_i,excel_Ind}(1:end,1));0]; % duration
             experiment_data{sub_i,excel_Ind}(:,4) = experiment_data{sub_i,excel_Ind}(:,2)==BR_event.stim1_start; % find stim1 perception onset
             experiment_data{sub_i,excel_Ind}(:,5) = experiment_data{sub_i,excel_Ind}(:,2)==BR_event.stim2_start; % find stim2 perception onset
@@ -82,7 +85,7 @@ close(h);
 mat_ind=1; %from 1 to length of numel(subjects)*howmanytrials
 h = waitbar(0,'Processing Data');
 for sub_i= 1:length(subjects)
-    % load non-BR task data - skip this phase for subjects or experiments
+    % load non-BR task data - skip this phase for subjects or experiments 
     % where the data was not collected (no arousal in experiment 1).
     [skip_subjective_arousal,skip_subjective_value]=deal(false);
     arousal_file=dir([behav_data_folder,subjects{sub_i},'_Arousal*.txt']);
@@ -127,12 +130,12 @@ for sub_i= 1:length(subjects)
     
     for trial_i=1:num_of_trials % Go through all subject trials and calculate dependent variables
         % mat with trial info: 1 - onset,  2 - event, 3 - duration, 4 - isStim1event, 5 - isStim2event
-        trial_data = experiment_data{sub_i,trial_i};
+        trial_data = experiment_data{sub_i,trial_i};         
         
         stim1_time = sum(trial_data(trial_data(:,4)==1,3));
         stim2_time = sum(trial_data(trial_data(:,5)==1,3));
         fusion_time = sum(trial_data(trial_data(:,4)==0 & trial_data(:,5)==0,3));
-        Stim1Quantity = sum(trial_data(:,4)); % Stim1Quantity
+                Stim1Quantity = sum(trial_data(:,4)); % Stim1Quantity
         Stim2Quantity = sum(trial_data(:,5)); % Stim2Quantity
         
         % first perceived stimulus
@@ -157,7 +160,7 @@ for sub_i= 1:length(subjects)
         if is_corrupted_trial
             [stim1_time, stim2_time, fusion_time, initial_stim_is_Stim1, Stim1Quantity, Stim2Quantity] = deal(nan);
         end
-        
+
         % Value and Arousal rankings
         stimuli1name = strrep(stimuli_pairs{sub_i}.StimA{trial_i},'.jpg','');
         stimuli2name = strrep(stimuli_pairs{sub_i}.StimB{trial_i},'.jpg','');

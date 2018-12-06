@@ -57,9 +57,12 @@ for experiment_num = 1:2
     data.excluded_for_familiarity = data.familiar_faces<familiarity_thresh(experiment_num);
     data.excluded_for_corruption = is_tested&(~is_valid);
     data.is_valid = is_valid;
+    valid_subjects_data = data(data.is_valid==1,:);
     
     fprintf('\n%s\n==================\n',experiment_name)
     fprintf('Valid n = %i; Total participated n = %i\n',sum(data.is_valid),numel(data.is_valid))
     fprintf('Excluded for familiarity n = %i; Excluded for under 75%% valid trials n = %i\n',sum(data.excluded_for_familiarity), sum(data.excluded_for_corruption))
+    fprintf('Age: Mean = %.2f, Range = %i - %i\n', mean(valid_subjects_data.age),  min(valid_subjects_data.age), max(valid_subjects_data.age))
+    fprintf('Gender: %i females (%.2f%%)\n', sum(valid_subjects_data.gender_1_female_2_male_ ==1),  100*mean(valid_subjects_data.gender_1_female_2_male_ ==1))
 end
 warning('on');
