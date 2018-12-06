@@ -1,2 +1,2 @@
-subjectID	order	date	gender(1-female, 2-male)	age	dominant hand (1-right, 2-left)	occupation
-subject_057	1	07-Jun-2016_14h35m	1	23	1	a student for art history and gender studies
+subjectID	order	date	"gender(1-female, 2-male)"	age	"dominant hand (1-right, 2-left)"	occupation
+subject_059	1	07-Jun-2016_14h35m	1	23	1	a student for art history and gender studies

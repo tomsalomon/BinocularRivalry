@@ -131,6 +131,8 @@ for sub_i= 1:length(subjects)
         stim1_time = sum(trial_data(trial_data(:,4)==1,3));
         stim2_time = sum(trial_data(trial_data(:,5)==1,3));
         fusion_time = sum(trial_data(trial_data(:,4)==0 & trial_data(:,5)==0,3));
+                Stim1Quantity = sum(trial_data(:,4)); % Stim1Quantity
+        Stim2Quantity = sum(trial_data(:,5)); % Stim2Quantity
         
         % first perceived stimulus
         first_stim1_loc = min([999,find(trial_data(:,2)==11, 1)]); %"1" indicates finding only the first index. 999 in case not percieved
@@ -152,7 +154,7 @@ for sub_i= 1:length(subjects)
             ismember(trial_data(:,2),struct2array(BR_event))];
         is_corrupted_trial = ~all(valid_events);
         if is_corrupted_trial
-            [stim1_time,stim2_time,fusion_time,initial_stim_is_Stim1] = deal(nan);
+            [stim1_time, stim2_time, fusion_time, initial_stim_is_Stim1, Stim1Quantity, Stim2Quantity] = deal(nan);
         end
 
         % Value and Arousal rankings
@@ -179,8 +181,8 @@ for sub_i= 1:length(subjects)
         Data_mat(mat_ind,3) = stim1_time/(stim1_time+stim2_time); %Stim1Fraction
         Data_mat(mat_ind,4) = stim2_time/(stim1_time+stim2_time); %Stim2Fraction
         Data_mat(mat_ind,5) = fusion_time;
-        Data_mat(mat_ind,6) = sum(trial_data(:,4)); % Stim1Quantity
-        Data_mat(mat_ind,7) = sum(trial_data(:,5)); % Stim2Quantity
+        Data_mat(mat_ind,6) = Stim1Quantity; % Stim1Quantity
+        Data_mat(mat_ind,7) = Stim2Quantity; % Stim2Quantity
         Data_mat(mat_ind,8) = initial_stim_is_Stim1; % InitialStim1 - is stim 1 the initial
         Data_mat(mat_ind,9) = sub_i; % SubjectInd
         Data_mat(mat_ind,10) = str2double(subjects{sub_i}(end-1:end)); % SubjectCode

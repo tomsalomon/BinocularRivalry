@@ -1,14 +1,18 @@
 
+# Load rquired R packages
+require("lme4")
+require("lmerTest")
+require("Rcmdr")
+require("rstudioapi")
+
+# clear workspace
 rm(list=ls())
 
-library("lme4")
-library("lmerTest")
-library("Rcmdr")
-
-# Define these variable:
-output_path="/Users/tomsalomon/Drive/Experiment_Israel/Codes/Binocular_Rivalry/BR_IAPS/analysis/output"
-#output_path="C:/Users/Tom/Dropbox/Experiment_Israel/Codes/Binocular_Rivalry_IAPS/BR_hilla/analysis/output/"
-subjects=c(1:3,5:7,9,11,13:19,21:23,25:39,41:42,44:45,47:49,51:52,54:56,58:63,65,67:75,77:81,83,85)
+# Define the current script location as the working directory
+pwd = dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(pwd)
+output_path=paste0(pwd,'/processed_data/')
+subjects=load('./processed_data/BR_data_BR_Celebrities_20181204_18h_34m_valid_subjects.txt')
 
 data_file=Sys.glob(paste(output_path, "/BR_data_20180102*.txt",sep=""))
 BR_data=read.table(data_file,header=T,na.strings=c(999))
