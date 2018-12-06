@@ -1,3 +1,6 @@
+% ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 function [valid_subjects,invalid_subjects]=Script2_SubjectsValidity(data,visualize)
 
 % Define these variables
@@ -66,8 +69,8 @@ end
 valid_subjects=summary_valid(summary_valid(:,6)==1,1);
 invalid_subjects=summary_valid(summary_valid(:,6)==0,1);
 if exist('data_file', 'var')
-    output_file_path_valid = [data_file(1:strfind(data_file,'.')-1),'_valid_subjects.txt'];
-    output_file_path_invalid = [data_file(1:strfind(data_file,'.')-1),'_invalid_subjects.txt'];
+    output_file_path_valid = ['valid_subjects_',data_file(1:strfind(data_file,'.')-1),'.txt'];
+    output_file_path_invalid = ['invalid_subjects_',data_file(1:strfind(data_file,'.')-1),'.txt'];
     csvwrite(fullfile(data_path,output_file_path_valid),valid_subjects)
     csvwrite(fullfile(data_path,output_file_path_invalid),invalid_subjects)
 end

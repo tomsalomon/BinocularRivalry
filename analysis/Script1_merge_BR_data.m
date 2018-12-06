@@ -15,7 +15,10 @@
 %       'Arousal' in Experiment 2. discrete scale from 0 - 10
 %       'Arousal scale' in Experiment 3. continuous scale from 0 - 10
 % output_path - where the processed merged data file will be saved
-% experiment_num - the experiment to analyze: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+% experiment_num - the experiment to analyze: 1 - 'BR_Celebrities', 2 - 
+% 'BR_Politicians', 3 - 'BR_IAPS'
+% ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Initialize code - define paths and pre-allocation
 clear;

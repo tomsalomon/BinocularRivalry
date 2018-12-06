@@ -1,3 +1,5 @@
+% ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 close all;
 clear;
@@ -5,7 +7,7 @@ rng(1); % for reproducability
 
 % Define these variables:
 analysis_path = pwd;
-data_path = [analysis_path,'/output'];
+data_path = [analysis_path,'/processed_data'];
 
 data_file_options = dir([data_path,'/BR_data*']);
 if length(data_file_options)>1
