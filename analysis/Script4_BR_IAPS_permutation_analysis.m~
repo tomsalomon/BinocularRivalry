@@ -110,7 +110,7 @@ for trialtype=1:length(trialtypenames)
         summary_table.Mean_difference(ind)=mean(diff_means{trialtype,measurement_type});
         summary_table.Mean_Stim1(ind)=mean(Stim1_means{trialtype,measurement_type});
         summary_table.Mean_Stim2(ind)=mean(Stim2_means{trialtype,measurement_type});
-        CI=bootci(20000,@(x)mean(x),diff_means{trialtype,measurement_type});
+        CI=bootci(1000,@(x)mean(x),diff_means{trialtype,measurement_type});
         summary_table.CI_lower(ind)=CI(1);
         summary_table.CI_upper(ind)=CI(2);
         title(measurement_type_names(measurement_type));

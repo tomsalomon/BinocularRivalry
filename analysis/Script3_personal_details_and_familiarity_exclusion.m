@@ -15,7 +15,7 @@
 %
 %% Initialize code - define paths and pre-allocation
 clear;
-
+clc;
 warning('off');
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
 familiarity_thresh = [40, 30,inf]; % minimal number of familiar faces to be included in the experiment
@@ -71,6 +71,7 @@ for experiment_num = 1:3
     fprintf('Valid n = %i; Total participated n = %i\n',sum(data.is_valid),numel(data.is_valid))
     fprintf('Excluded for familiarity n = %i; Excluded for under 75%% valid trials n = %i\n',sum(data.excluded_for_familiarity), sum(data.excluded_for_corruption))
     fprintf('Age: Mean = %.2f, Range = %i - %i\n', nanmean(valid_subjects_data.age),  min(valid_subjects_data.age), max(valid_subjects_data.age))
-    fprintf('Gender: %i females (%.2f%%)\n', sum(valid_subjects_data.gender_1_female_2_male_ ==1),  100*nanmean(valid_subjects_data.gender_1_female_2_male_ ==1))
+    fprintf('Gender: n = %i females (%.2f%%)\n', sum(valid_subjects_data.gender_1_female_2_male_ ==1),  100*nanmean(valid_subjects_data.gender_1_female_2_male_ ==1))
+    fprintf('Dominant hand: n = %i Right hand (%.2f%%)\n', sum(valid_subjects_data.dominantHand_1_right_2_left_ ==1),  100*nanmean(valid_subjects_data.dominantHand_1_right_2_left_ ==1))
 end
 warning('on');

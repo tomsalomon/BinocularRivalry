@@ -53,20 +53,22 @@ end
 p_value_onesided=sum(more_extreme_samples)/random_sample_n;
 if onetailed
     p_value=p_value_onesided;
+    p_string = ['p (one-sided): ',num2str(p_value)];
 else
     p_value=p_value_onesided*2;
+    p_string = ['p (two-sided): ',num2str(p_value)];
 end
 
 if visualize
-    bin_width=(max(random_distribution_means)-min(random_distribution_means))/50;
+    bin_width=(max(random_distribution_means)-min(random_distribution_means))/100;
     %figure
-    histogram(random_distribution_means(:),'BinWidth',bin_width,'EdgeAlpha',0.5);
+    histogram(random_distribution_means(:),'BinWidth',bin_width,'EdgeAlpha',0.5,'EdgeColor','none');
     hold on
-    histogram(random_distribution_means(~more_extreme_samples),'BinWidth',bin_width,'FaceColor','k');
+    histogram(random_distribution_means(~more_extreme_samples),'BinWidth',bin_width,'FaceColor','k','EdgeColor','none');
     plot([random_distribution_means(1),random_distribution_means(1)],ylim,'b--','LineWidth',2)
     ylim(ylim*1.2); % add some space above
     northwest_pos=[min(xlim)+(max(xlim)-min(xlim))*0.05 ,min(ylim)+(max(ylim)-min(ylim))*0.9];
-    text(northwest_pos(1),northwest_pos(2),['p (one-sided): ',num2str(p_value_onesided)]);
+    text(northwest_pos(1),northwest_pos(2),p_string);
     hold off
 end
 
