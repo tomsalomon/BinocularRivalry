@@ -34,6 +34,16 @@ BR_data.trialtype(BR_data.Delta_Aro==0 & BR_data.IsHighAro==1) = 1; % High Arous
 BR_data.trialtype(BR_data.Delta_Aro==0 & BR_data.IsHighAro==0) = 2; % Low Arousal - Different Value
 BR_data.trialtype(BR_data.Delta_Val==0 & BR_data.IsHighVal==1) = 3; % High Value - Different Arousal
 BR_data.trialtype(BR_data.Delta_Val==0 & BR_data.IsHighVal==0) = 4; % Low Value - Different Arousal
+
+% exclude trials where subjective ratings did not match the expected delta arousal or value
+BR_data.Delta_Val_ranking = BR_data.Val1_Ranking - BR_data.Val2_Ranking;
+BR_data.Delta_Aro_ranking = BR_data.Aro1_Ranking - BR_data.Aro2_Ranking;
+BR_data.Delta_Val_ranking(BR_data.Delta_Val==0) = 0;
+BR_data.Delta_Aro_ranking(BR_data.Delta_Aro==0) = 0;
+
+invalid_trials(sign(BR_data.Delta_Val_ranking)~=BR_data.Delta_Val)=1;
+invalid_trials(sign(BR_data.Delta_Aro_ranking)~=BR_data.Delta_Aro)=1;
+
 if experiment_num==3
     trialtypenames={'High Arousal: Different Value','Low Arousal: Different Value','High Value: Different Arousal','Low Value: Different Arousal'};
 else
@@ -106,11 +116,16 @@ for trialtype=1:length(trialtypenames)
         
         subplot(1,length(measurement_type_names),measurement_type)
         summary_table.p(ind)=dependent_samples_permutation_mean(diff_means{trialtype,measurement_type});
+        if trialtype<=2
+            xlabel(sprintf('\\Delta %s: High minus Low Value',measurement_type_names{measurement_type}))
+        elseif  trialtype<=4
+            xlabel(sprintf('\\Delta %s: High minus Low Arousal',measurement_type_names{measurement_type}))
+        end
         pause(0.01);
         summary_table.Mean_difference(ind)=mean(diff_means{trialtype,measurement_type});
         summary_table.Mean_Stim1(ind)=mean(Stim1_means{trialtype,measurement_type});
         summary_table.Mean_Stim2(ind)=mean(Stim2_means{trialtype,measurement_type});
-        CI=bootci(1000,@(x)mean(x),diff_means{trialtype,measurement_type});
+        CI=bootci(20000,@(x)mean(x),diff_means{trialtype,measurement_type});
         summary_table.CI_lower(ind)=CI(1);
         summary_table.CI_upper(ind)=CI(2);
         title(measurement_type_names(measurement_type));
@@ -128,7 +143,7 @@ end
 %         dependent_samples_permutation_mean(interaction_diff);
 %         title(measurement_type_names(measurement_type));
 %     end
-%     
+%
 %     % Main Effects
 %     figure('Name','Main Effect: High vs. Low Value','units','normalized','position',[0.1,0.1,length(measurement_type_names)*0.2,0.2]);
 %     for measurement_type=1:length(measurement_type_names)
@@ -138,17 +153,31 @@ end
 %         title(measurement_type_names(measurement_type));
 %     end
 % end
-
+figure('units','normalized','position',[0.2,0.2,0.6,0.6])
 for measurement_type=1:length(measurement_type_names)
-    figure('Name',measurement_type_names{measurement_type});
+    %figure('Name',measurement_type_names{measurement_type});
+            subplot(2,length(measurement_type_names)/2,measurement_type)
     means=summary_table.Mean_difference(strcmp(summary_table.Measurement,measurement_type_names{measurement_type}));
     CI_lower=summary_table.CI_lower(strcmp(summary_table.Measurement,measurement_type_names{measurement_type}));
     CI_upper=summary_table.CI_upper(strcmp(summary_table.Measurement,measurement_type_names{measurement_type}));
     bar(diag(means),'stacked')
-    set(gca,'XtickLabel',strrep(trialtypenames,': ',':\newline'))
+    X_ticks = strrep(trialtypenames,': ',':\newline');
+    X_ticks = strrep(X_ticks,'Different','Diff.');
+    set(gca,'XtickLabel',X_ticks)
     hold on
-    errorbar(1:num_TrialTypes,means,means-CI_lower,CI_upper-means,'k*');
+    errorbar(1:num_TrialTypes,means,means-CI_lower,CI_upper-means,'k.');
     ylim([min(CI_lower),max(CI_upper)]*1.2)
+    title(sprintf('\\Delta %s: High minus Low',measurement_type_names{measurement_type}))
 end
-
 disp(summary_table)
+
+%
+% for  trialtype = 1:num_TrialTypes
+%     corr_mat_data = array2table(cell2mat(diff_means(trialtype,:)')');
+%     corr_mat_data.Properties.VariableNames=strrep(measurement_type_names,' ','_');
+%     corrplot(corr_mat_data);
+% end
+% 
+% if experiment_num==3
+%      corrplot([diff_means{1,2}(:),diff_means{2,2}(:),diff_means{3,2}(:),diff_means{4,2}(:)])
+% end

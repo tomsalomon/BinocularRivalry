@@ -4,6 +4,7 @@ require("lme4")
 require("lmerTest")
 require("Rcmdr")
 require("rstudioapi")
+require("viridis")
 
 # clear workspace
 rm(list=ls())
@@ -17,7 +18,6 @@ experiment_names = c('BR_Celebrities','BR_Politicians','BR_IAPS')
 model_i = 0
 summary_df=as.data.frame(c())
 models = list(c())
-data_list = list(c())
 for (experiment_num in 1:length(experiment_names)) { 
   experiment_name = experiment_names[experiment_num]
   print(paste("analyzing:", experiment_name))
@@ -57,21 +57,23 @@ for (experiment_num in 1:length(experiment_names)) {
   # Exclude invalid trials: participant pressed 2 keys simoultanously or did not percieve any stimulus (all fusion)
   BR_data$ValidTrials=TRUE
   BR_data$ValidTrials[BR_data$IsCorrupted | ((BR_data$Stim1Time+BR_data$Stim2Time) == 0)] = FALSE 
-  # Scale rankings so models can converge
-  BR_data$Val1_Ranking = BR_data$Val1_Ranking/max(BR_data$Val1_Ranking,na.rm=TRUE)
-  BR_data$Val2_Ranking = BR_data$Val2_Ranking/max(BR_data$Val2_Ranking,na.rm=TRUE)
+  
+  # Scale rankings t0 [0,1] so models can converge
   if (experiment_num >=2){
-  BR_data$Aro1_Ranking = BR_data$Aro1_Ranking/max(BR_data$Aro1_Ranking,na.rm=TRUE)
-  BR_data$Aro2_Ranking = BR_data$Aro2_Ranking/max(BR_data$Aro2_Ranking,na.rm=TRUE)
+    BR_data$Aro1_Ranking = BR_data$Aro1_Ranking/10
+    BR_data$Aro2_Ranking = BR_data$Aro2_Ranking/10
+  } 
+  if (experiment_num ==3) {
+    BR_data$Val1_Ranking = BR_data$Val1_Ranking/10
+    BR_data$Val2_Ranking = BR_data$Val2_Ranking/10 
   }
-
+  
   BR_data$Delta_Val_rating=BR_data$Val1_Ranking-BR_data$Val2_Ranking
   BR_data$Delta_Aro_rating=BR_data$Aro1_Ranking-BR_data$Aro2_Ranking
   BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
   BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
   BR_data$DiffQuantity = (BR_data$Stim1Quantity - BR_data$Stim2Quantity)
   measurement_names = c('DiffFraction','DiffTime','DiffQuantity','InitialStim1')
-  data_list[experiment_num] = BR_data
   
   # -------- Run Models
   for (TrialType_i in 1:max(BR_data$TrialType)){
@@ -102,6 +104,9 @@ for (experiment_num in 1:length(experiment_names)) {
       summary_df = rbind(summary_df,summary_df_tmp)
     }
   }
+  if (experiment_num == 1) {BR_data1 = BR_data
+  } else if (experiment_num == 2) {BR_data2 = BR_data
+  } else if (experiment_num == 3) {BR_data3 = BR_data}
 }
 
 summary_df$asterisk = ""
@@ -111,79 +116,43 @@ summary_df$asterisk[summary_df$p < .01] = "**"
 summary_df$asterisk[summary_df$p < .001] = "***"
 
 
+# Plot Experiment 2 interaction model
+BR_data_3d=subset(BR_data2,(ValidTrials & (is.na(BR_data2$Delta_Val_rating)==0)  & (is.na(BR_data2$Delta_Aro_rating)==0) ))
+mid = 0
+interaction_model = lm(DiffTime ~ Delta_Aro_rating * Delta_Val_rating ,data = BR_data_3d,na.action =na.omit )
+BR_data_3d$predicted = predict(mymodel)
+x <- seq(-1,1,length.out=101) # on respective x and y axis
+y <- seq(.5,1,length.out=101)
+prediction_plane_df <- expand.grid(x=x, y=y) #grid for colors
+colnames(prediction_plane_df)= c("Delta_Aro_rating","Delta_Val_rating")
+prediction_plane_df$PredictedDominance = predict(interaction_model,prediction_plane_df) # Model prediction as the color factor
+prediction_plane_df$DiffTime=NaN
+mid=0
+ggplot(data=BR_data_3d,aes(x = Delta_Aro_rating , y= Delta_Val_rating, color = DiffTime))+  
+  geom_raster(data =prediction_plane_df, aes(Delta_Aro_rating, Delta_Val_rating,fill = PredictedDominance))+
+  scale_fill_gradient2(midpoint = mid, high = "green", low = "blue", mid="white")+ # color scheme
+  #scale_fill_viridis() +
+  geom_point(alpha = 0.5 ,size = 4)+
+  labs(title="Average Dominance Duration of High-Value Stimuli:\nModel Prediction VS Actual Results")+
+  scale_color_gradient (high = "green", low = "blue", space ="Lab")+
+  #scale_color_gradient2 (midpoint = mid, high = "green", low = "blue", mid="white", space ="Lab")+
+  theme(axis.line.x=element_line(),
+        axis.line.y=element_line())+ 
+  xlim(-1,1)+ ylim(.5,1)+
+  coord_cartesian(expand = F) + # no padding for border
+  xlab(expression(paste(Delta," Subjective Arousal"))) +
+  ylab(expression(paste(Delta," Subjective Value"))) +
+  labs(color='Actual Dominance')+
+  theme_bw()
 
-
-
-
-
-# -------- Experiment 2: Politicians - Has subjective value and arousal measurements
-if (experiment_num ==2) {
-  if (measurement_i <=3) { # Continuous dependent variables
-    summary(lmer(formula(paste0(measurement_name, " ~ 1 + Delta_Val_rating * Delta_Aro_rating + (1|SubjectCode)")),
-                 data=subset(BR_data,ValidTrials),na.action=na.omit))
-    
-  } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept
-    summary(glmer(formula(paste0(measurement_name, " ~ 1 + Delta_Val_rating * Delta_Aro_rating + (1|SubjectCode)")),
-                  data=subset(BR_data,ValidTrials),na.action=na.omit, family = binomial))
-  }
-}
-
-# -------- Experiment 3: IAPS - Has subjective value, subjective arousal measurements, and 4 conditions (trial-types)
-# test for every trial type separetly
-if (experiment_num ==2) {
-  if (measurement_i <=3) {
-    summary(lmer(formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1|SubjectCode)")),
-                 data=subset(BR_data,ValidTrials & TrialType==trial_i),na.action=na.omit)) 
-  } else if (measurement_i == 4) {
-    summary(glmer(formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1|SubjectCode)")),
-                  data=subset(BR_data,ValidTrials & TrialType==trial_i),na.action=na.omit, family = binomial)) 
-  }
-}
-
-
-
-
-
-
-
-
-# OTHER TEST - EXP 3
-# Simple effects: set intercept to 0
-simple_effects_formula = formula(paste0(measurement_name, " ~ -1  + TrialType2 + (1|SubjectCode)")) # e.g. DiffTime ~ -1  + TrialType2 + (1|SubjectCode)
-if (measurement_i <=3) {
-  summary(lmer(simple_effects_formula,data=subset(BR_data,ValidTrials & TrialType<=2),na.action=na.omit)) 
-  summary(lmer(simple_effects_formula,data=subset(BR_data,ValidTrials & TrialType>=3),na.action=na.omit))
-} else if (measurement_i == 4) {
-  summary(glmer(simple_effects_formula,data=subset(BR_data,ValidTrials & TrialType<=2),na.action=na.omit, family = binomial)) 
-  summary(glmer(simple_effects_formula,data=subset(BR_data,ValidTrials & TrialType>=3),na.action=na.omit, family = binomial)) 
-}
-
-# Difference between trials effects: set intercept to baseline trials' mean, second effect is the difference between conditions
-trial_difference_formula = formula(paste0(measurement_name, " ~ 1  + TrialType2 + (1|SubjectCode)")) # e.g. DiffTime ~ 1  + TrialType2 + (1|SubjectCode)
-if (measurement_i <=3) {
-  summary(lmer(trial_difference_formula,data=subset(BR_data,ValidTrials & TrialType<=2),na.action=na.omit)) 
-  summary(lmer(trial_difference_formula,data=subset(BR_data,ValidTrials & TrialType>=3),na.action=na.omit)) 
-} else if (measurement_i == 4) {
-  summary(glmer(trial_difference_formula,data=subset(BR_data,ValidTrials & TrialType<=2),na.action=na.omit, family = binomial)) 
-  summary(glmer(trial_difference_formula,data=subset(BR_data,ValidTrials & TrialType>=3),na.action=na.omit)) 
-}
-
-
-summary(lmer(formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating*Delta_Aro_rating + (1|SubjectCode)")),
-             data=subset(BR_data,ValidTrials & TrialType<=2),na.action=na.omit)) 
-summary(lmer(formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating*Delta_Aro_rating + (1|SubjectCode)")),
-             data=subset(BR_data,ValidTrials & TrialType>=3),na.action=na.omit)) 
-summary(lmer(formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating*Delta_Aro_rating + (1|SubjectCode)")),
-             data=subset(BR_data,ValidTrials & TrialType == Trial_i),na.action=na.omit)) 
-
-BR_data2=subset(BR_data,(BR_data$ValidTrials))
-
-scatter3d(DiffFraction ~ Delta_Aro_rating + Delta_Val_rating , BR_data2, 
+scatter3d(DiffFraction ~ Delta_Aro_rating + Delta_Val_rating , BR_data_3d, 
           parallel=FALSE, fit="smooth",
-          surface.col=list("black","blue") ,surface.alpha = list(0.3),axis.scales=FALSE,
-          xlab = c("Preference Bias (rank)"), 
-          ylab = c("PHQ (rank)"), 
-          zlab = c("CAT effect (rank)"),
+          surface.col="blue" ,surface.alpha = list(0.3),axis.scales=FALSE, point.col="black",
+          xlab = "Delta Subjective Arousal", 
+          ylab = "Dominance of HV stimuli", 
+          zlab = "Delta Subjective Value",
           neg.res.col = NA,
           pos.res.col = NA) 
+
+
 
