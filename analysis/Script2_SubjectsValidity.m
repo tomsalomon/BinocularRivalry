@@ -29,10 +29,10 @@ data.AllFusion=data.Stim1Time+data.Stim2Time==0; % Exclude all fusion trials
 data.ValidTrial = ~(data.IsCorrupted|data.AllFusion);
 % Define trial type for experiment 3 with IAPS
 data.trialtype=ones(size(data(:,1))); % assign trial 1 for Exp. 1-2
-data.trialtype(data.Delta_Aro==0 & data.IsHighAro==1) = 1; % High Arousal - Different Valence
-data.trialtype(data.Delta_Aro==0 & data.IsHighAro==0) = 2; % Low Arousal - Different Valence
-data.trialtype(data.Delta_Val==0 & data.IsHighVal==1) = 3; % High Valence - Different Arousal
-data.trialtype(data.Delta_Val==0 & data.IsHighVal==0) = 4; % Low Valence - Different Arousal
+data.trialtype(data.Delta_Aro==0 & data.IsHighAro==1) = 1; % High Arousal - Different Value
+data.trialtype(data.Delta_Aro==0 & data.IsHighAro==0) = 2; % Low Arousal - Different Value
+data.trialtype(data.Delta_Val==0 & data.IsHighVal==1) = 3; % High Value - Different Arousal
+data.trialtype(data.Delta_Val==0 & data.IsHighVal==0) = 4; % Low Value - Different Arousal
 num_trialtypes = max(data.trialtype);
 
 summary_valid=zeros(max(data.SubjectInd),max(data.trialtype)+1);

@@ -1,59 +1,42 @@
-% This script reads the raw data from Binocular Rivalry (BR) experiment
-% and summerize measurements per each trial. In addition, the script looks
-% for subjective measurements of value and arousal and adds them to the
-% final outputted table.
-%
-% Important paths and info:
-% Experiment/BR_Data/ - BR data is stored here. Each trial has an xlsx file.
-% each participant has a file called 'BR_params_default.xlsx' where the
-% data which stimuli appeared in each trial is stored.
-% Experiment/Behavioral_Data/ - non BR data is stored here, namely:
-% 	subjective value
-%       'item ranking results' in Experiments 1-2. Results of Colley ranking algorithm (normal range: 0 - 1).
-%       'Value scale' in Experiment 3. continuous scale from 0 - 10
-% 	Subjective Arousal
-%       'Arousal' in Experiment 2. discrete scale from 0 - 10
-%       'Arousal scale' in Experiment 3. continuous scale from 0 - 10
-% output_path - where the processed merged data file will be saved
-% experiment_num - the experiment to analyze: 1 - 'BR_Celebrities', 2 - 
-% 'BR_Politicians', 3 - 'BR_IAPS'
+% This script reads the the subjective ratings of IAPS stimuli used in
+% Experiment 3 and shows their descriptive statistics
 % ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 %% Initialize code - define paths and pre-allocation
 clear;
 % Define these variables
-experiment_num = 2; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
-num_of_trials=64; % number of trials in experiment (64 in all three experiments)
+experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+num_of_stimuli=16; % number of stimuli used in the experiment
 
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
 experiment_name = experiment_names{experiment_num};
 analysis_path=pwd;
 experiment_path = [analysis_path,'/../',experiment_name];
-tmp_data_path=[experiment_path,'/tmp_data/']; % place where temporary mat files (with the xlsx files info) will be stored
-output_path=[analysis_path,'/processed_data/'];
-BR_raw_data_folder= ([experiment_path,'/BR_Data/']);
+data_path = [analysis_path,'/processed_data'];
 behav_data_folder=([experiment_path,'/Behavioral_Data/']);
-% BR events - will be used to find corrupted trials where participats press 2 keys simoultanously
-BR_event.trial_start = 1;
-BR_event.trial_end = 2;
-BR_event.stim1_start = 11;
-BR_event.stim1_end = 21;
-BR_event.stim2_start = 12;
-BR_event.stim2_end = 22;
-% create list of subjects
-BR_raw_data_struct=dir([BR_raw_data_folder,'*Sub*']); %struct with subjects folders
-subjects={BR_raw_data_struct.name}; % cell array with all folders
-% pre-allocation
-Data_mat=nan(num_of_trials*length(subjects),20); % mat where numerical results will be written
-experiment_data=cell(length(subjects),num_of_trials); % cell array where raw BR data will be stored
-stimuli_pairs=cell(length(subjects),1); % cell array where the names of stimuli will be stored
-names1=cell(length(Data_mat(:,1)),1);
-names2=cell(length(Data_mat(:,1)),1);
+data_file_options = dir(sprintf('%s/BR_data_%s*',data_path,experiment_name));
+if length(data_file_options)>1
+    data_file_selection = listdlg('PromptString','Select a data file:','SelectionMode','single','ListString',{data_file_options.name},'ListSize',[500,400]);
+else
+    data_file_selection = 1;
+end
+data_file=data_file_options(data_file_selection).name;
 
-%% Loading data from excel file to MATLAB cell variable
+% remove invalid subject
+valid_subjects = csvread(sprintf('%s/valid_subjects_%s',data_path,data_file));
+invalid_subjects = csvread(sprintf('%s/invalid_subjects_%s',data_path,data_file));
+num_of_subjects = length(valid_subjects);
+
+% pre-allocation
+Data_mat=nan(num_of_subjects,num_of_stimuli); % mat where numerical results will be written
+
+%% Loading data from behavioral file to MATLAB cell variable
 h = waitbar(0,'Reading raw data into MATLAB');
-for sub_i= 1:length(subjects)  % running subject. notice: subject's ID is not subject's index
+for sub_i= 1:num_of_subjects  % running subject. notice: subject's ID is not subject's index
+    subject_code = valid_subjects(sub_i);
+    data_file = dir(behav_data_folder,
+    
     subject_dir=dir([BR_raw_data_folder,'/',subjects{sub_i},'/*Sub*']); %struct with dated folder name
     subject_with_date = subject_dir.name; %subject name and date for full path
     subject_path= [subject_dir.folder,'/',subject_with_date,'/'];
@@ -108,7 +91,7 @@ for sub_i= 1:length(subjects)
         value_data.StimName=strrep(value_data.StimName,'.jpg','');
     catch
         try % IAPS subjective ratings on a scale
-            value_file=dir([behav_data_folder,subjects{sub_i},'*Value*.txt']);
+            value_file=dir([behav_data_folder,subjects{sub_i},'*Valence*.txt']);
             value_data=readtable([behav_data_folder,value_file.name],'delimiter','\t','HeaderLines',0,'ReadVariableNames',true);
             value_data.Rank = value_data.Bid;
             value_data.StimName = strrep(value_data.Name,'.jpg','');
@@ -125,10 +108,10 @@ for sub_i= 1:length(subjects)
         IsHighVal(IsHighVal==0.5) = nan;
         IsHighAro(IsHighAro==0.5) = nan;
     catch
-        [delta_val,delta_aro, IsHighVal, IsHighAro] = deal(nan(num_of_trials,1));
+        [delta_val,delta_aro, IsHighVal, IsHighAro] = deal(nan(num_of_stimuli,1));
     end
     
-    for trial_i=1:num_of_trials % Go through all subject trials and calculate dependent variables
+    for trial_i=1:num_of_stimuli % Go through all subject trials and calculate dependent variables
         % mat with trial info: 1 - onset,  2 - event, 3 - duration, 4 - isStim1event, 5 - isStim2event
         trial_data = experiment_data{sub_i,trial_i};
         
@@ -202,7 +185,7 @@ for sub_i= 1:length(subjects)
         Data_mat(mat_ind,20) = is_corrupted_trial; % IsCorrupted
         names1{mat_ind} = stimuli1name;
         names2{mat_ind} = stimuli2name;
-        waitbar(mat_ind/(numel(subjects)*num_of_trials),h)
+        waitbar(mat_ind/(numel(subjects)*num_of_stimuli),h)
         mat_ind=mat_ind+1;
     end
 end
