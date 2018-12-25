@@ -18,6 +18,7 @@ experiment_names = c('BR_Celebrities','BR_Politicians','BR_IAPS')
 model_i = 0
 summary_df=as.data.frame(c())
 models = list(c())
+analysis_summaries = list(c())
 for (experiment_num in 1:length(experiment_names)) { 
   experiment_name = experiment_names[experiment_num]
   print(paste("analyzing:", experiment_name))
@@ -58,7 +59,7 @@ for (experiment_num in 1:length(experiment_names)) {
   BR_data$ValidTrials=TRUE
   BR_data$ValidTrials[BR_data$IsCorrupted | ((BR_data$Stim1Time+BR_data$Stim2Time) == 0)] = FALSE 
   
-  # Scale rankings t0 [0,1] so models can converge
+  # Scale rankings to [0,1] so models can converge
   if (experiment_num >=2){
     BR_data$Aro1_Ranking = BR_data$Aro1_Ranking/10
     BR_data$Aro2_Ranking = BR_data$Aro2_Ranking/10
@@ -70,7 +71,7 @@ for (experiment_num in 1:length(experiment_names)) {
   
   BR_data$Delta_Val_rating=BR_data$Val1_Ranking-BR_data$Val2_Ranking
   BR_data$Delta_Aro_rating=BR_data$Aro1_Ranking-BR_data$Aro2_Ranking
-  BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
+  BR_data$DiffFraction = (BR_data$Stim1Fraction - 0.5) #   BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
   BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
   BR_data$DiffQuantity = (BR_data$Stim1Quantity - BR_data$Stim2Quantity)
   measurement_names = c('DiffFraction','DiffTime','DiffQuantity','InitialStim1')
@@ -90,15 +91,18 @@ for (experiment_num in 1:length(experiment_names)) {
       } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept
         models[[model_i]] = glmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit, family = binomial)
       }
-      
       analysis_summary = summary(models[[model_i]])
+      analysis_summaries[[model_i]] = analysis_summary
       colnames(analysis_summary$coefficients)[grep('Pr',(colnames(analysis_summary$coefficients)))] = "p" # replace Pr(>|z|) / Pr(>|t|) with p
-      coeff_selection = colnames(analysis_summary$coefficients) %in% c("Estimate","Std. Error","p") # make sure the number of column match
-      summary_df_tmp = as.data.frame(analysis_summary$coefficients[,coeff_selection],row.names = FALSE)
+      colnames(analysis_summary$coefficients)[4] = "t/z value" # replace "t value" / "z value" with "t/z value"
+      
+      summary_df_tmp = as.data.frame(analysis_summary$coefficients,row.names = FALSE)
+      if (measurement_i == 4) { summary_df_tmp$df = NA }
       summary_df_tmp$experiment_name = experiment_name
       summary_df_tmp$experiment_num = experiment_num
       summary_df_tmp$TrialType = TrialType_i
       summary_df_tmp$measurement = measurement_name
+      summary_df_tmp$model = model_i
       summary_df_tmp$coefficient = rownames(analysis_summary$coefficients)
       summary_df_tmp = summary_df_tmp[,c(4:ncol(summary_df_tmp),1:3)] # order df with coefficients as last columns
       summary_df = rbind(summary_df,summary_df_tmp)
@@ -150,3 +154,5 @@ scatter3d(DiffFraction ~ Delta_Aro_rating + Delta_Val_rating , BR_data_3d,
           zlab = "Delta Subjective Value",
           neg.res.col = NA,
           pos.res.col = NA) 
+
+View(summary_df)
