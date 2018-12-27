@@ -115,7 +115,7 @@ for trialtype=1:length(trialtypenames)
         Stim2_means{trialtype,measurement_type}=nanmean(Stim2_mat);
         
         subplot(1,length(measurement_type_names),measurement_type)
-        summary_table.p(ind)=dependent_samples_permutation_mean(diff_means{trialtype,measurement_type});
+        summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type});
         if trialtype<=2
             xlabel(sprintf('\\Delta %s: High minus Low Value',measurement_type_names{measurement_type}))
         elseif  trialtype<=4
@@ -133,26 +133,6 @@ for trialtype=1:length(trialtypenames)
     end
 end
 
-
-% if experiment_num==3
-%     % Interaction
-%     figure('Name','Interaction: High vs. Low Value','units','normalized','position',[0.1,0.1,length(measurement_type_names)*0.2,0.2]);
-%     for measurement_type=1:length(measurement_type_names)
-%         interaction_diff=diff_means{3,measurement_type}-diff_means{4,measurement_type};
-%         subplot(1,length(measurement_type_names),measurement_type);
-%         dependent_samples_permutation_mean(interaction_diff);
-%         title(measurement_type_names(measurement_type));
-%     end
-%
-%     % Main Effects
-%     figure('Name','Main Effect: High vs. Low Value','units','normalized','position',[0.1,0.1,length(measurement_type_names)*0.2,0.2]);
-%     for measurement_type=1:length(measurement_type_names)
-%         main_effect=(diff_means{3,measurement_type}+diff_means{4,measurement_type})/2;
-%         subplot(1,length(measurement_type_names),measurement_type);
-%         dependent_samples_permutation_mean(main_effect);
-%         title(measurement_type_names(measurement_type));
-%     end
-% end
 figure('units','normalized','position',[0.2,0.2,0.6,0.6])
 for measurement_type=1:length(measurement_type_names)
     %figure('Name',measurement_type_names{measurement_type});

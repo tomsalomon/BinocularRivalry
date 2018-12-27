@@ -1,17 +1,19 @@
 
-function [p_value,random_distribution_means]=dependent_samples_permutation_mean(data,visualize,onetailed,seed)
-% This functio  will perform a permutation test for dependent samples
-% means.
-% Input may be: 1 vector of the two group differences, or the two groups.
-
-% for replicability
-% rng('Shuffle');
+function [p_value,random_distribution_means]=sign_flip_permutation_test(data,visualize,onetailed,seed)
+% This function  will perform a permutation test for one sample mean via
+% sign flipping. In case of dependent sample test, give as input (1 X N)
+% difference vector or (trial_n X N) matrix where each row is a trial, and
+% each column is a subject.
+% The function will average results per subject (columns), and perform
+% random sign flipping for the subjects' values.
+%
+% Input may be: 1 vector of values (the two group differences).
 
 if ~exist('data','var')
     error('An input data must be supplied');
 end
 
-if ~exist('onesided','var')
+if ~exist('onetailed','var')
     onetailed=false;
 end
 
@@ -27,7 +29,15 @@ rng(seed) % set randomisation seed for reproducibility
 random_sample_n=20000;
 % Data is assumed to be organized as Column per subject ans row per trial
 [n_trials,N]=size(data);
-
+if N==1 % reorient
+    if n_trials >1
+    data=data';
+    [n_trials,N]=size(data);
+    else
+        error(['Can only use vector or (num_trials,num_subjects) sized matrix input. '...
+            'Please use a vector of means or matrix with trials as rows and subjects as columns'])
+    end
+end
 if n_trials>1
     group_means=nanmean(data);
 else
@@ -64,12 +74,12 @@ else
 end
 
 if visualize
-    bin_width=(max(random_distribution_means)-min(random_distribution_means))/100;
-    %figure
+    n_bins = 100;
+    bin_width=(max(random_distribution_means)-min(random_distribution_means))/n_bins;
     histogram(random_distribution_means(:),'BinWidth',bin_width,'EdgeAlpha',0.5,'EdgeColor','none');
     hold on
     histogram(random_distribution_means(~more_extreme_samples),'BinWidth',bin_width,'FaceColor','k','EdgeColor','none');
-    plot([random_distribution_means(1),random_distribution_means(1)],ylim,'b--','LineWidth',2)
+    plot([random_distribution_means(1),random_distribution_means(1)],ylim,'b--','LineWidth',2) % original effect
     ylim(ylim*1.2); % add some space above
     northwest_pos=[min(xlim)+(max(xlim)-min(xlim))*0.05 ,min(ylim)+(max(ylim)-min(ylim))*0.9];
     text(northwest_pos(1),northwest_pos(2),p_string);

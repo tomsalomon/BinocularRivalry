@@ -60,7 +60,7 @@ while (stop_cond > 0) && (n < max_N)
         data = diff_mean; % copy variable here to aviod communication overhead warning
         rand_sample=randi(N,[n,1]);
         rand_sample_data=data(:,rand_sample);
-        p_values(itr,n)=dependent_samples_permutation_mean(rand_sample_data,visualize,onetailed,permutation_seed);
+        p_values(itr,n)=sign_flip_permutation_test(rand_sample_data,visualize,onetailed,permutation_seed);
     end
     % Count significant results proportion
     if mean(p_values(:,n) < alpha) > power_target
@@ -85,7 +85,7 @@ xlim([0,n]);
 ylim([0,1]);
 set(gca,'XTick', 0:2:(floor(n/2)*2));
 xlabel('Sample size (N)')
-ylabel('Power')
+ylabel(sprintf('Power (1 - \\beta)'))
 hold on
 plot(xlim,[power_target,power_target],'b--');
 plot([required_n,required_n],ylim,'r--');
