@@ -1,5 +1,13 @@
 % This script reads the the subjective ratings of IAPS stimuli used in
-% Experiment 3 and shows their descriptive statistics
+% Experiment 3 and shows their descriptive statistic
+%
+% Scripts that need to run prior to this one:
+% ------------------------------------------
+% * 'Script1_merge_BR_data.m' - combine individual participants data into one
+%   table per experiment
+% *	'Script2_SubjectsValidity.m' - define valid participants to be included
+%   in the analysis
+%
 % ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

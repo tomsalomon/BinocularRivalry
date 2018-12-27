@@ -71,10 +71,15 @@ for (experiment_num in 1:length(experiment_names)) {
   
   BR_data$Delta_Val_rating=BR_data$Val1_Ranking-BR_data$Val2_Ranking
   BR_data$Delta_Aro_rating=BR_data$Aro1_Ranking-BR_data$Aro2_Ranking
-  BR_data$DiffFraction = (BR_data$Stim1Fraction - 0.5) #   BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
-  BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
-  BR_data$DiffQuantity = (BR_data$Stim1Quantity - BR_data$Stim2Quantity)
+  BR_data$DiffFraction = (1+sign(BR_data$Stim1Fraction - 0.5))/2 #   BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
+  BR_data$DiffTime = (1+sign(BR_data$Stim1Time - BR_data$Stim2Time))/2
+  BR_data$DiffQuantity = (1+sign(BR_data$Stim1Quantity - BR_data$Stim2Quantity))/2
   measurement_names = c('DiffFraction','DiffTime','DiffQuantity','InitialStim1')
+  
+  
+  BR_data$DiffFraction[BR_data$DiffFraction==0.5] = NaN
+  BR_data$DiffTime[BR_data$DiffTime==0.5] = NaN
+  BR_data$DiffQuantity[BR_data$DiffQuantity==0.5] = NaN
   
   # -------- Run Models
   for (TrialType_i in 1:max(BR_data$TrialType)){
@@ -82,22 +87,19 @@ for (experiment_num in 1:length(experiment_names)) {
       model_i = model_i+1
       measurement_name = measurement_names [measurement_i]
       if (experiment_num ==1) { # Subjective value in experiment 1
-        model_formula = formula(paste0(measurement_name, " ~ -1  + Delta_Val_rating + (1|SubjectCode)"))
+        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1|SubjectCode)"))
       } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
         model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1|SubjectCode)"))
       }
-      if (measurement_i <=3) { # Continuous dependent variables
-        models[[model_i]] = lmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit)
-      } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept
+      # Binomial dependent variable - is stim1 first percept
         models[[model_i]] = glmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit, family = binomial)
-      }
       analysis_summary = summary(models[[model_i]])
       analysis_summaries[[model_i]] = analysis_summary
       colnames(analysis_summary$coefficients)[grep('Pr',(colnames(analysis_summary$coefficients)))] = "p" # replace Pr(>|z|) / Pr(>|t|) with p
       colnames(analysis_summary$coefficients)[grep('value',(colnames(analysis_summary$coefficients)))] = "t/z value" # replace "t value" / "z value" with "t/z value"
       
       summary_df_tmp = as.data.frame(analysis_summary$coefficients,row.names = FALSE)
-      if (measurement_i == 4) { summary_df_tmp$df = NA }
+      if (measurement_i <= 4) { summary_df_tmp$df = NA }
       summary_df_tmp$experiment_name = experiment_name
       summary_df_tmp$experiment_num = experiment_num
       summary_df_tmp$TrialType = TrialType_i

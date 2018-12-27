@@ -1,5 +1,5 @@
 
-function [p_value,random_distribution_means]=dependent_samples_permutation_mean(data,visualize,onetailed)
+function [p_value,random_distribution_means]=dependent_samples_permutation_mean(data,visualize,onetailed,seed)
 % This functio  will perform a permutation test for dependent samples
 % means.
 % Input may be: 1 vector of the two group differences, or the two groups.
@@ -19,7 +19,11 @@ if ~exist('visualize','var')
     visualize=true;
 end
 
-rng(1) % set randomisation seed for reproducibility
+if ~exist('seed','var')
+    seed=1;
+end
+
+rng(seed) % set randomisation seed for reproducibility
 random_sample_n=20000;
 % Data is assumed to be organized as Column per subject ans row per trial
 [n_trials,N]=size(data);
