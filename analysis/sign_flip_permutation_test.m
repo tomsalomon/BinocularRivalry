@@ -29,13 +29,10 @@ rng(seed) % set randomisation seed for reproducibility
 random_sample_n=20000;
 % Data is assumed to be organized as Column per subject ans row per trial
 [n_trials,N]=size(data);
-if N==1 % reorient
+if N==1 % reorient vectors
     if n_trials >1
     data=data';
     [n_trials,N]=size(data);
-    else
-        error(['Can only use vector or (num_trials,num_subjects) sized matrix input. '...
-            'Please use a vector of means or matrix with trials as rows and subjects as columns'])
     end
 end
 if n_trials>1
