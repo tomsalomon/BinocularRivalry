@@ -29,7 +29,7 @@ if ~exist('seed','var')
     seed=1;
 end
 
-if ~exist('end','var')
+if ~exist('permutations_n','var')
 permutations_n=20000;
 end
 
