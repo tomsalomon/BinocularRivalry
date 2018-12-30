@@ -11,7 +11,7 @@ function [p_value,random_distribution_means]=sign_flip_permutation_test(data, vi
 % visualize (default = True) - plot hitogram of permutation results
 % onetailed (default = True) - two-sided hypothesis (multiply p-value by 2)
 % seed (default = 1) - seed for reproducibility
-% permutations_n (default = 200,000) - number of random permutations
+% permutations_n (default = 20,000) - number of random permutations
 
 if ~exist('data','var')
     error('An input data must be supplied');
