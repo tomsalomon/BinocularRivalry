@@ -156,3 +156,7 @@ scatter3d(DiffFraction ~ Delta_Aro_rating + Delta_Val_rating , BR_data_3d,
           pos.res.col = NA) 
 
 View(summary_df)
+
+# miss-match of subjetive ratings and manipulation:
+missmatch_value = sum(BR_data$Delta_Val_rating[BR_data$TrialType<=2 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType<=2 & BR_data$ValidTrials==1)
+missmatch_arousal = sum(BR_data$Delta_Aro_rating[BR_data$TrialType>=3 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType>=3 & BR_data$ValidTrials==1)
