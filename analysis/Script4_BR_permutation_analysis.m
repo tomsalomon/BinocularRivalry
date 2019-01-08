@@ -6,7 +6,7 @@ clear;
 rng(1); % for reproducability
 
 % Define these variables:
-experiment_num = 1; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 analysis_path = pwd;
 data_path = [analysis_path,'/processed_data'];
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
