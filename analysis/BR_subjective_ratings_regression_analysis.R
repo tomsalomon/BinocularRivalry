@@ -5,6 +5,7 @@ library("lme4") # for mixed effect models
 library("lmerTest") # get p-values for mixed effect models
 library("ggplot2") # plot package
 library("Rcmdr") # 3d plot package
+library("lm.beta")
 
 # clear workspace
 rm(list=ls())
@@ -119,44 +120,25 @@ summary_df$asterisk[summary_df$p < .05] = "*"
 summary_df$asterisk[summary_df$p < .01] = "**"
 summary_df$asterisk[summary_df$p < .001] = "***"
 
-
-# Plot Experiment 2 interaction model
-BR_data_3d=subset(BR_data2,(ValidTrials & (is.na(BR_data2$Delta_Val_rating)==0)  & (is.na(BR_data2$Delta_Aro_rating)==0) ))
-mid = 0
-interaction_model = lm(DiffTime ~ Delta_Aro_rating * Delta_Val_rating ,data = BR_data_3d,na.action =na.omit) # fixed effects model, ignoring Subject random effect, just to get approximate coefficients
-interaction_model_mixed = lmer(DiffTime ~ Delta_Aro_rating * Delta_Val_rating + (1|SubjectCode),data = BR_data_3d,na.action =na.omit) # mixed effects model, with Subject random effect
-BR_data_3d$predicted = predict(interaction_model_mixed)
-x <- seq(-1,1,length.out=101) # on respective x and y axis
-y <- seq(.5,1,length.out=101)
-prediction_plane_df <- expand.grid(x=x, y=y) #grid for colors
-colnames(prediction_plane_df)= c("Delta_Aro_rating","Delta_Val_rating")
-prediction_plane_df$PredictedDominance = predict(interaction_model,prediction_plane_df) # Model prediction as the color factor
-prediction_plane_df$DiffTime=NaN
-mid=0
-ggplot(data=BR_data_3d,aes(x = Delta_Aro_rating , y= Delta_Val_rating, color = DiffTime))+  
-  geom_raster(data = prediction_plane_df, aes(Delta_Aro_rating, Delta_Val_rating,fill = PredictedDominance)) + # Prediction plane as background
-  scale_fill_gradient2(midpoint = mid, high = "green", low = "blue", mid="white") + # color scheme for the prediction plane
-  geom_point(alpha = 0.5 ,size = 4) + # Actual data
-  scale_color_gradient (high = "green", low = "blue", space ="Lab") + # color scheme for the actual data
-  #scale_color_gradient2 (midpoint = mid, high = "green", low = "blue", mid="white", space ="Lab") + # color scheme for the actual data
-  labs(title="Average Dominance Duration of High-Value Stimuli:\nModel Prediction VS Actual Results", color='Actual Dominance') + # header and labels
-  xlab(expression(paste(Delta," Subjective Arousal"))) +
-  ylab(expression(paste(Delta," Subjective Value"))) +
-  xlim(-1,1)+ ylim(.5,1)+
-  coord_cartesian(expand = F) + # no padding for border
-  theme_bw()
-
-scatter3d(DiffFraction ~ Delta_Aro_rating + Delta_Val_rating , BR_data_3d, 
-          parallel=FALSE, fit="smooth",
-          surface.col="blue" ,surface.alpha = list(0.3),axis.scales=FALSE, point.col="black",
-          xlab = "Delta Subjective Arousal", 
-          ylab = "Dominance of HV stimuli", 
-          zlab = "Delta Subjective Value",
-          neg.res.col = NA,
-          pos.res.col = NA) 
-
 View(summary_df)
 
 # miss-match of subjetive ratings and manipulation:
 missmatch_value = sum(BR_data$Delta_Val_rating[BR_data$TrialType<=2 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType<=2 & BR_data$ValidTrials==1)
 missmatch_arousal = sum(BR_data$Delta_Aro_rating[BR_data$TrialType>=3 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType>=3 & BR_data$ValidTrials==1)
+
+# Test prediction of condition 2 (Value | low arousal) which was not significant using the other measurement
+BR_data_agg=as.data.frame(aggregate(BR_data,by=list(BR_data$SubjectCode,BR_data$TrialType), mean, na.rm=TRUE))
+Data_by_sub=melt(BR_data_agg,id = c("SubjectInd", "TrialType") ,measurement_names)
+colnames(Data_by_sub)[ncol(Data_by_sub)-1] = "Measurement"
+levels(Data_by_sub$Measurement) = c("Predominance Score", "Dominance Duration", "Percepts After Fusion", "Initial Percept")
+PDS_data = Data_by_sub[Data_by_sub$Measurement=="Predominance Score",]
+PDS_data = cast(PDS_data,formula = SubjectInd ~ TrialType)
+colnames(PDS_data)[2:ncol(PDS_data)] = paste0("Cond",(2:ncol(PDS_data) -1 ))
+my_model = lm(Cond2 ~ -1 + Cond1 + Cond3 + Cond4, data = PDS_data)
+print(summary(lm.beta(my_model)))
+PDS_data$prediction = my_model$fitted.values
+ggplot (PDS_data, aes(x= prediction, y = Cond2)) +
+  geom_point() + geom_smooth(method = "lm") +
+  xlab("Model prediction") + ylab("Actual dominance") +
+  ggtitle("Predicted Dominance in (Value | Low-Arousal) Trials")
+
