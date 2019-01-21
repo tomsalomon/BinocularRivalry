@@ -77,15 +77,13 @@ end
 valid_subjects=summary_valid(summary_valid(:,6)==1,1);
 invalid_subjects=summary_valid(summary_valid(:,6)==0,1);
 
-summary_corrupted_valid_participants = mean(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end),2);
-summary_allfusion_valid_participants = mean(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end),2);
-iscorrupted_mean = mean(summary_corrupted_valid_participants);
-iscorrupted_sd = std(summary_corrupted_valid_participants);
-allfusion_mean = mean(summary_allfusion_valid_participants);
-allfusion_sd = std(summary_allfusion_valid_participants);
+iscorrupted_mean = mean(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end));
+iscorrupted_sd = std(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end));
+allfusion_mean = mean(summary_allfusion(ismember(summary_corrupted(:,1),valid_subjects),2:end));
+allfusion_sd = std(summary_allfusion(ismember(summary_corrupted(:,1),valid_subjects),2:end));
 
-fprintf('\nCorrupted trials: M = %.2f%%, SD = %.2f%%\n',iscorrupted_mean*100, iscorrupted_sd*100)
-fprintf('All Fusion trials: M = %.2f%%, SD = %.2f%%\n',allfusion_mean*100, allfusion_sd*100)
+fprintf('\n%Corrupted trials: M = %.2f, SD = %.2f\n',iscorrupted_mean, iscorrupted_sd)
+fprintf('%All Fusion trials: M = %.2f, SD = %.2f\n',allfusion_mean, allfusion_sd)
 
 if exist('data_file', 'var')
     output_file_path_valid = ['valid_subjects_',data_file(1:strfind(data_file,'.')-1),'.txt'];

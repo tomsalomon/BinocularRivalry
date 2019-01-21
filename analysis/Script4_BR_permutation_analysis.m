@@ -106,7 +106,7 @@ for trialtype=1:length(trialtypenames)
         Stim2_means{trialtype,measurement_type}=nanmean(Stim2_mat);
         
         subplot(1,length(measurement_type_names),measurement_type)
-        summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type});
+        summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type}, true, false, 1, 20000);
         if trialtype<=2
             xlabel(sprintf('\\Delta %s: High minus Low Value',measurement_type_names{measurement_type}))
         elseif  trialtype<=4
