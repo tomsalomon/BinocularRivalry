@@ -18,25 +18,26 @@ ggcorplot = function(my_data){
     cor_t = cor.test(dat_tmp$x1,dat_tmp$x2)
     p = cor_t$p.value
     if (p<.001) {sig = "***"} else if (p<.01) {sig = "**"} else if (p<.05) {sig = "*"} else if (p<.1) {sig = "#"} else {sig = ""}
-    r_text = paste("r =", round(cor_t$estimate,digits = 2),sig)
+    r_text = paste(round(cor_t$estimate,digits = 2),sig)
     #cor.test(dat_tmp)
     options(warn=-1)
     if (xi == yi) {
       assign(paste0("p", i), 
              qplot(data=dat_tmp, x=x1, geom = "histogram", bins = 10) +
-               labs(x=x_lab, y="\n") + theme_bw() +
-               ggtitle("")+
+               labs(x="", y="\n") + theme_bw() +
+               ggtitle(paste0("Cond. ",xi,"\n",x_lab)) +
                geom_vline(xintercept = 0, linetype = "dashed") +
-               theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+               theme(legend.position = "none",axis.text.y = element_blank(), axis.ticks.y = element_blank())
       ) } else {
         assign(paste0("p", i), 
                qplot(data=dat_tmp, x=x1,y=x2, alpha =.5) + 
                  theme_bw() +
                  geom_point(color = "gray30", alpha = 1/10)  + 
                  geom_smooth(method = 'lm', color = 1)  + 
-                 xlab(x_lab) + ylab(y_lab) +
+                 labs(x=x_lab, y=y_lab,title = bquote(italic(r) == .(r_text) ) ) +
+                 #xlab(x_lab) + ylab(y_lab) +
                  #geom_text(aes(x = min(dat_tmp$x1)*0.5 + max(dat_tmp$x1)*0.5, y=y_lim[2]*0.9), label = r_text,color = 2) + 
-                 ggtitle(r_text) + 
+                 #ggtitle(r_text) + 
                  # ylim(y_lim) +
                  theme(legend.position = "none", axis.ticks.y = element_blank() , axis.text.y=element_blank()) 
         )}    
