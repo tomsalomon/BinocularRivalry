@@ -143,7 +143,7 @@ for (experiment_num in 1:length(experiment_names)) {
     geom_text(data = SummaryTable, aes(y = yloc*1.1, label = non_significant, fontface=3),size = 3) + 
     labs( x = x_lab, y = y_lab) +
     # theme(axis.title.x=element_blank(), axis.title.y=element_blank()) + # remove x and y labs
-    scale_fill_grey(start = 0.9, end = .2) +
+    scale_fill_grey(start = 0.9, end = .5)
     ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
   
   dev.new()

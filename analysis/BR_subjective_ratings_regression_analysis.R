@@ -6,7 +6,7 @@ library("lmerTest") # get p-values for mixed effect models
 library("ggplot2") # plot package
 library("Rcmdr") # 3d plot package
 library("lm.beta")
-
+library("reshape2")
 # clear workspace
 rm(list=ls())
 
@@ -127,13 +127,16 @@ missmatch_value = sum(BR_data$Delta_Val_rating[BR_data$TrialType<=2 & BR_data$Va
 missmatch_arousal = sum(BR_data$Delta_Aro_rating[BR_data$TrialType>=3 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType>=3 & BR_data$ValidTrials==1)
 
 # Test prediction of condition 2 (Value | low arousal) which was not significant using the other measurement
+options(warn=-1)
 BR_data_agg=as.data.frame(aggregate(BR_data,by=list(BR_data$SubjectCode,BR_data$TrialType), mean, na.rm=TRUE))
 Data_by_sub=melt(BR_data_agg,id = c("SubjectInd", "TrialType") ,measurement_names)
+options(warn=0)
 colnames(Data_by_sub)[ncol(Data_by_sub)-1] = "Measurement"
 levels(Data_by_sub$Measurement) = c("Predominance Score", "Dominance Duration", "Percepts After Fusion", "Initial Percept")
 PDS_data = Data_by_sub[Data_by_sub$Measurement=="Predominance Score",]
-PDS_data = cast(PDS_data,formula = SubjectInd ~ TrialType)
-colnames(PDS_data)[2:ncol(PDS_data)] = paste0("Cond",(2:ncol(PDS_data) -1 ))
+PDS_data = acast(PDS_data,formula = SubjectInd ~ TrialType)
+PDS_data = as.data.frame(PDS_data)
+colnames(PDS_data)= paste0("Cond",(1:ncol(PDS_data)))
 my_model = lm(Cond2 ~ -1 + Cond1 + Cond3 + Cond4, data = PDS_data)
 print(summary(lm.beta(my_model)))
 PDS_data$prediction = my_model$fitted.values
