@@ -5,6 +5,7 @@ library("ggplot2") # plot package
 library("dplyr")
 library("reshape")
 library("gridExtra")
+library("stats") # adjustment for multiple comparisons
 
 # clear workspace
 rm(list=ls())
@@ -12,7 +13,8 @@ rm(list=ls())
 # Define the current script location as the working directory
 pwd = dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(pwd)
-data_path=paste0(pwd,'/processed_data/')
+data_path = paste0(pwd,'/processed_data/')
+output_path = paste0(pwd,'/figures/')
 experiment_names = c('BR_Celebrities','BR_Politicians','BR_IAPS') 
 
 for (experiment_num in 1:length(experiment_names)) {
@@ -96,12 +98,19 @@ for (experiment_num in 1:length(experiment_names)) {
     Data_by_sub$y_max[Data_by_sub$Measurement == Meas] = y_max
     SummaryTable$yloc [SummaryTable$Measurement == Meas] = y_max * (1.1/1.2)
   }
-  SummaryTable$non_significant = paste0 ("p = ",round(SummaryTable$p,digits = 2))
-  SummaryTable$non_significant[SummaryTable$p < .05] = ""
-  SummaryTable$asterisk = ""
-  SummaryTable$asterisk[SummaryTable$p < .05] = "*"
-  SummaryTable$asterisk[SummaryTable$p < .01] = "**"
-  SummaryTable$asterisk[SummaryTable$p < .001] = "***"
+  # Benjamini & Hochberg adjustment for multiplt comparisons
+  SummaryTable$p_adj = NA
+  for (TrialType_i in levels(SummaryTable$TrialType)) {
+    ps = SummaryTable$p[SummaryTable$TrialType == TrialType_i]
+    SummaryTable$p_adj = p.adjust(ps, method ="hochberg")
+  }
+  SummaryTable$non_significant = paste0 ("italic(p)"," == ",round(SummaryTable$p_adj,digits = 2))
+  SummaryTable$non_significant[SummaryTable$p_adj < .05] = "' '"
+  SummaryTable$asterisk = "' '"
+  #SummaryTable$asterisk[SummaryTable$p_adj < .1] = "scriptstyle('+')"
+  SummaryTable$asterisk[SummaryTable$p_adj < .05] = "'*'"
+  SummaryTable$asterisk[SummaryTable$p_adj < .01] = "'**'"
+  SummaryTable$asterisk[SummaryTable$p_adj < .001] = "'***'"
   
   if (experiment_num<3) {
     y_lab = "High-Value Dominance"
@@ -124,7 +133,7 @@ for (experiment_num in 1:length(experiment_names)) {
     geom_blank(aes(y=y_min)) + # will set 0 at the middle with facet_wrap free scale
     geom_blank(aes(y=y_max)) + # will set 0 at the middle with facet_wrap free scale
     theme(aspect.ratio=num_rows*0.2 , axis.title.x=element_blank(), axis.title.y=element_blank()) +
-    geom_text(data = SummaryTable, aes(y = yloc, label = asterisk), position = position_dodge(width = .75)) +
+    geom_text(parse = TRUE,data = SummaryTable, aes(y = yloc, label = asterisk), position = position_dodge(width = .75)) +
     ggtitle(gsub("_"," ",experiment_name))
   # dev.new()
   # print(violin_plot)
@@ -139,8 +148,8 @@ for (experiment_num in 1:length(experiment_names)) {
     geom_blank(aes(y=y_min)) + # will set 0 at the middle with facet_wrap free scale
     geom_blank(aes(y=y_max)) + # will set 0 at the middle with facet_wrap free scale
     theme(aspect.ratio=2/num_rows, legend.position="none") + 
-    geom_text(data = SummaryTable, aes(y = yloc, label = asterisk),size = 10) +
-    geom_text(data = SummaryTable, aes(y = yloc*1.1, label = non_significant, fontface=3),size = 3) + 
+    geom_text(parse = TRUE,data = SummaryTable, aes(y = yloc, label = asterisk),size = 10) +
+    geom_text(parse = TRUE,data = SummaryTable, aes(y = yloc*1.1, label = non_significant, fontface=3),size = 3) + 
     labs( x = x_lab, y = y_lab) +
     # theme(axis.title.x=element_blank(), axis.title.y=element_blank()) + # remove x and y labs
     scale_fill_grey(start = 0.9, end = .5)
@@ -149,7 +158,7 @@ for (experiment_num in 1:length(experiment_names)) {
   dev.new()
   print(box_plot)
   # Save plot as pdf
-  pdf(file=paste(data_path,'plot_',experiment_name,'.pdf',sep = ""), width=7, height=num_rows*7/2)
+  pdf(file=paste(output_path,'plot_',experiment_name,'.pdf',sep = ""), width=7, height=num_rows*7/2)
   print(box_plot)
   dev.off()
 }
@@ -163,6 +172,6 @@ colnames(PDS_data) = levels(Data_by_sub$TrialType2)
 source("ggcorplot.R")
 dev.new()
 ggcorplot(PDS_data)
-pdf(file=paste0(data_path,'correaltion_matrix.pdf'), width=8.5,height=8)
+pdf(file=paste0(output_path,'correaltion_matrix.pdf'), width=8.5,height=8)
 ggcorplot(PDS_data)
 dev.off()
