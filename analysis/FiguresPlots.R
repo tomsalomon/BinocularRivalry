@@ -97,12 +97,14 @@ for (experiment_num in 1:length(experiment_names)) {
     Data_by_sub$y_min[Data_by_sub$Measurement == Meas] = y_min
     Data_by_sub$y_max[Data_by_sub$Measurement == Meas] = y_max
     SummaryTable$yloc [SummaryTable$Measurement == Meas] = y_max * (1.1/1.2)
+    SummaryTable$yloc2 [SummaryTable$Measurement == Meas] = max(abs(c(
+      SummaryTable$CI_lower[SummaryTable$Measurement == Meas],SummaryTable$CI_upper[SummaryTable$Measurement == Meas] )))
   }
   # Benjamini & Hochberg adjustment for multiplt comparisons
   SummaryTable$p_adj = NA
   for (TrialType_i in levels(SummaryTable$TrialType)) {
     ps = SummaryTable$p[SummaryTable$TrialType == TrialType_i]
-    SummaryTable$p_adj = p.adjust(ps, method ="hochberg")
+    SummaryTable$p_adj[SummaryTable$TrialType == TrialType_i] = p.adjust(ps, method ="hochberg")
   }
   SummaryTable$non_significant = paste0 ("italic(p)"," == ",round(SummaryTable$p_adj,digits = 2))
   SummaryTable$non_significant[SummaryTable$p_adj < .05] = "' '"
@@ -113,10 +115,10 @@ for (experiment_num in 1:length(experiment_names)) {
   SummaryTable$asterisk[SummaryTable$p_adj < .001] = "'***'"
   
   if (experiment_num<3) {
-    y_lab = "High-Value Dominance"
+    y_lab = "High-Value Dominance Over Low-Value "
     x_lab = ""
   } else if (experiment_num==3) {
-    y_lab = "High-Value / High-Arousal Dominance"
+    y_lab = "High Value/Arousal Dominance Over Low Value/Arousal"
     x_lab = "Manipulated Feature"
   }
   
@@ -155,11 +157,27 @@ for (experiment_num in 1:length(experiment_names)) {
     scale_fill_grey(start = 0.9, end = .5)
     ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
   
+    bar_plot = ggplot(SummaryTable, aes(x=TrialType2, y=Mean_difference, fill = TrialType2)) + 
+      facet_wrap(~Measurement, scales = 'free', nrow = num_rows ) +
+      #geom_dotplot(data = Data_by_sub, binaxis='y', stackdir='center', dotsize =.3) +
+      geom_bar(stat="identity", size =.2, color =1) +
+      geom_hline(yintercept=0, linetype="dashed", size =1, color =1) +
+      theme_bw() +
+      geom_errorbar( width=.2, aes(ymin=CI_lower, ymax=CI_upper))  + # add error bar of 95% CI
+      geom_blank(aes(y=yloc2*(-1))) + # will set 0 at the middle with facet_wrap free scale
+      geom_blank(aes(y=yloc2))+ # will set 0 at the middle with facet_wrap free scale
+      theme(aspect.ratio=2/num_rows, legend.position="none") + 
+      geom_text(parse = TRUE, aes(y = yloc2, label = asterisk),size = 10) +
+      geom_text(parse = TRUE, aes(y = yloc2*1.1, label = non_significant, fontface=3),size = 3) + 
+      labs( x = x_lab, y = y_lab) +
+      scale_fill_grey(start = 1, end = .5) +
+      ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
+    
   dev.new()
-  print(box_plot)
+  print(bar_plot)
   # Save plot as pdf
   pdf(file=paste(output_path,'plot_',experiment_name,'.pdf',sep = ""), width=7, height=num_rows*7/2)
-  print(box_plot)
+  print(bar_plot)
   dev.off()
 }
 
@@ -172,6 +190,6 @@ colnames(PDS_data) = levels(Data_by_sub$TrialType2)
 source("ggcorplot.R")
 dev.new()
 ggcorplot(PDS_data)
-pdf(file=paste0(output_path,'correaltion_matrix.pdf'), width=8.5,height=8)
+pdf(file=paste0(output_path,'correaltion_matrix.pdf'), width=9,height=8)
 ggcorplot(PDS_data)
 dev.off()
