@@ -83,10 +83,12 @@ for (experiment_num in 1:length(experiment_names)) {
       model_i = model_i+1
       measurement_name = measurement_names [measurement_i]
       if (experiment_num ==1) { # Subjective value in experiment 1
-        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 + Delta_Val_rating|SubjectCode)"))
-      } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
-        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + Delta_Val_rating + Delta_Aro_rating|SubjectCode)"))
-      }
+        #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 + Delta_Val_rating|SubjectCode)")) # with random slopes
+        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 |SubjectCode)"))
+          } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
+        #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + Delta_Val_rating + Delta_Aro_rating|SubjectCode)")) # with random slopes
+        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + |SubjectCode)"))
+         }
       if (measurement_i <=3) { # Continuous dependent variables
         models[[model_i]] = lmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit)
       } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept

@@ -30,7 +30,7 @@ if ~exist('seed','var')
 end
 
 if ~exist('permutations_n','var')
-permutations_n=2000000;
+permutations_n=20000;
 end
 
 rng(seed) % set randomisation seed for reproducibility

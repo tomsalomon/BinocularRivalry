@@ -6,12 +6,11 @@ clear;
 rng(1); % for reproducability
 
 % Define these variables:
-experiment_num = 1; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 analysis_path = pwd;
 data_path = [analysis_path,'/processed_data'];
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
-save_summary_table = true; % change to true to save summary table in the data folder
-num_permutations = 200000;
+save_summary_table = false; % change to true to save summary table in the data folder
 
 experiment_name = experiment_names{experiment_num};
 data_file_options = dir(sprintf('%s/BR_data_%s*',data_path,experiment_name));
@@ -107,7 +106,7 @@ for trialtype=1:length(trialtypenames)
         Stim2_means{trialtype,measurement_type}=nanmean(Stim2_mat);
         
         subplot(1,length(measurement_type_names),measurement_type)
-        summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type}, true, false, 1, num_permutations);
+        summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type}, true, false, 1, 20000);
         if trialtype<=2
             xlabel(sprintf('\\Delta %s: High minus Low Value',measurement_type_names{measurement_type}))
         elseif  trialtype<=4
@@ -122,11 +121,9 @@ for trialtype=1:length(trialtypenames)
         summary_table.CI_upper(ind)=CI(2);
         title(measurement_type_names(measurement_type));
     end
-    % Benjamini Hochberg FDR correction
     trials_ind = ismember(summary_table.TrialType,trialtypenames(trialtype));
     ps_to_correct = summary_table.p(trials_ind);
-    [~, ~, ~, adj_p]=fdr_bh(ps_to_correct);
-    summary_table.p_FDR_corrected(trials_ind) = adj_p;
+    summary_table.p_FDR_corrected(trials_ind) = ps_to_correct./
 end
 
 figure('units','normalized','position',[0.2,0.2,0.6,0.6])

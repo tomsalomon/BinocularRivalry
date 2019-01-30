@@ -86,9 +86,11 @@ for (experiment_num in 1:length(experiment_names)) {
   Data_by_sub$y_max = NA
   
   # Data frame containing asterisks representing statistical significance
-  levels(SummaryTable$Measurement) = levels(Data_by_sub$Measurement)[order(unique(SummaryTable$Measurement))]
+  SummaryTable$Measurement = factor(SummaryTable$Measurement,levels = unique(SummaryTable$Measurement))
+  levels(SummaryTable$Measurement) = levels(Data_by_sub$Measurement)
   SummaryTable$TrialType2 = as.factor(SummaryTable$TrialType)
   levels(SummaryTable$TrialType2) = levels(Data_by_sub$TrialType2)[order(unique(SummaryTable$TrialType2))]
+  SummaryTable$TrialType2 = factor(SummaryTable$TrialType2,levels = unique(SummaryTable$TrialType2))
   SummaryTable$yloc = NA
   Measurements = levels(Data_by_sub$Measurement)
   for (Meas in Measurements) {
@@ -104,7 +106,7 @@ for (experiment_num in 1:length(experiment_names)) {
   SummaryTable$p_adj = NA
   for (TrialType_i in levels(SummaryTable$TrialType)) {
     ps = SummaryTable$p[SummaryTable$TrialType == TrialType_i]
-    SummaryTable$p_adj[SummaryTable$TrialType == TrialType_i] = p.adjust(ps, method ="hochberg")
+    SummaryTable$p_adj[SummaryTable$TrialType == TrialType_i] = p.adjust(ps, method ="BH")
   }
   SummaryTable$non_significant = paste0 ("italic(p)"," == ",round(SummaryTable$p_adj,digits = 2))
   SummaryTable$non_significant[SummaryTable$p_adj < .05] = "' '"
@@ -160,7 +162,7 @@ for (experiment_num in 1:length(experiment_names)) {
     bar_plot = ggplot(SummaryTable, aes(x=TrialType2, y=Mean_difference, fill = TrialType2)) + 
       facet_wrap(~Measurement, scales = 'free', nrow = num_rows ) +
       #geom_dotplot(data = Data_by_sub, binaxis='y', stackdir='center', dotsize =.3) +
-      geom_bar(stat="identity", size =.2, color =1) +
+      geom_bar(stat="identity", size =.2, color =1, width=.5) +
       geom_hline(yintercept=0, linetype="dashed", size =1, color =1) +
       theme_bw() +
       geom_errorbar( width=.2, aes(ymin=CI_lower, ymax=CI_upper))  + # add error bar of 95% CI
@@ -170,7 +172,7 @@ for (experiment_num in 1:length(experiment_names)) {
       geom_text(parse = TRUE, aes(y = yloc2, label = asterisk),size = 10) +
       geom_text(parse = TRUE, aes(y = yloc2*1.1, label = non_significant, fontface=3),size = 3) + 
       labs( x = x_lab, y = y_lab) +
-      scale_fill_grey(start = 1, end = .5) +
+      scale_fill_grey(start = .9, end = .5) +
       ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
     
   dev.new()
