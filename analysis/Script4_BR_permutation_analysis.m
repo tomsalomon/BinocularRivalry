@@ -6,7 +6,7 @@ clear;
 rng(1); % for reproducability
 
 % Define these variables:
-experiment_num = 1; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 analysis_path = pwd;
 data_path = [analysis_path,'/processed_data'];
 experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
@@ -117,7 +117,8 @@ for trialtype=1:length(trialtypenames)
         summary_table.Mean_difference(ind)=mean(diff_means{trialtype,measurement_type});
         summary_table.Mean_Stim1(ind)=mean(Stim1_means{trialtype,measurement_type});
         summary_table.Mean_Stim2(ind)=mean(Stim2_means{trialtype,measurement_type});
-        CI=bootci(20000,@(x)mean(x),diff_means{trialtype,measurement_type});
+        rng(1); 
+        CI=bootci(num_permutations,@(x)mean(x),diff_means{trialtype,measurement_type});
         summary_table.CI_lower(ind)=CI(1);
         summary_table.CI_upper(ind)=CI(2);
         title(measurement_type_names(measurement_type));

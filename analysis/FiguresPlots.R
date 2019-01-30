@@ -108,7 +108,7 @@ for (experiment_num in 1:length(experiment_names)) {
     ps = SummaryTable$p[SummaryTable$TrialType == TrialType_i]
     SummaryTable$p_adj[SummaryTable$TrialType == TrialType_i] = p.adjust(ps, method ="BH")
   }
-  SummaryTable$non_significant = paste0 ("italic(p)"," == ",round(SummaryTable$p_adj,digits = 2))
+  SummaryTable$non_significant = paste0 ("italic(p)"," == ",round(SummaryTable$p_adj,digits = 3))
   SummaryTable$non_significant[SummaryTable$p_adj < .05] = "' '"
   SummaryTable$asterisk = "' '"
   #SummaryTable$asterisk[SummaryTable$p_adj < .1] = "scriptstyle('+')"
