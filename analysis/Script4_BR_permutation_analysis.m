@@ -117,7 +117,7 @@ for trialtype=1:length(trialtypenames)
         summary_table.Mean_difference(ind)=mean(diff_means{trialtype,measurement_type});
         summary_table.Mean_Stim1(ind)=mean(Stim1_means{trialtype,measurement_type});
         summary_table.Mean_Stim2(ind)=mean(Stim2_means{trialtype,measurement_type});
-        rng(1); 
+        rng(1);
         CI=bootci(num_permutations,@(x)mean(x),diff_means{trialtype,measurement_type});
         summary_table.CI_lower(ind)=CI(1);
         summary_table.CI_upper(ind)=CI(2);
@@ -155,8 +155,23 @@ end
 % end
 disp(summary_table)
 if save_summary_table
-writetable(summary_table,[data_path,'/SummaryTable_',experiment_name,'.txt'],'delimiter','\t')
+    writetable(summary_table,[data_path,'/SummaryTable_',experiment_name,'.txt'],'delimiter','\t')
 end
 if experiment_num==3
-    corrplot([diff_means{1,2}(:),diff_means{2,2}(:),diff_means{3,2}(:),diff_means{4,2}(:)])
+    corrmat = cell(num_measurements,1);
+    betas_i = cell(num_measurements,num_TrialTypes);
+    multiple_r_square = nan(num_measurements,num_TrialTypes);
+    regression_p = nan(num_measurements,num_TrialTypes);
+    for measurement_i = 1:num_measurements
+        data_mat = [diff_means{1,measurement_i}(:),diff_means{2,measurement_i}(:),diff_means{3,measurement_i}(:),diff_means{4,measurement_i}(:)];
+        corrplot(data_mat)
+        corrmat{measurement_i} = corrcoef(data_mat);
+        for trialtype_i = 1:num_TrialTypes
+            y = data_mat(:,trialtype_i);
+            X = [ones(size(y)),data_mat(:,1:num_TrialTypes~=trialtype_i)];
+            [betas_i{measurement_i,trialtype_i},~,~,~,stats] = regress(y,X);
+            multiple_r_square(measurement_i,trialtype_i) = stats(1);
+            regression_p(measurement_i,trialtype_i) = stats(3);
+        end
+    end
 end

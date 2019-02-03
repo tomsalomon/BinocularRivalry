@@ -4,7 +4,6 @@ library("rstudioapi") # to define current working directory
 library("lme4") # for mixed effect models
 library("lmerTest") # get p-values for mixed effect models
 library("ggplot2") # plot package
-library("Rcmdr") # 3d plot package
 library("lm.beta")
 library("reshape2")
 # clear workspace
@@ -85,10 +84,10 @@ for (experiment_num in 1:length(experiment_names)) {
       if (experiment_num ==1) { # Subjective value in experiment 1
         #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 + Delta_Val_rating|SubjectCode)")) # with random slopes
         model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 |SubjectCode)"))
-          } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
+      } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
         #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + Delta_Val_rating + Delta_Aro_rating|SubjectCode)")) # with random slopes
-        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + |SubjectCode)"))
-         }
+        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 |SubjectCode)"))
+      }
       if (measurement_i <=3) { # Continuous dependent variables
         models[[model_i]] = lmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit)
       } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept
@@ -142,8 +141,34 @@ colnames(PDS_data)= paste0("Cond",(1:ncol(PDS_data)))
 my_model = lm(Cond2 ~ -1 + Cond1 + Cond3 + Cond4, data = PDS_data)
 print(summary(lm.beta(my_model)))
 PDS_data$prediction = my_model$fitted.values
+dev.new()
 ggplot (PDS_data, aes(x= prediction, y = Cond2)) +
   geom_point() + geom_smooth(method = "lm") +
   xlab("Model prediction") + ylab("Actual dominance") +
   ggtitle("Predicted Dominance in (Value | Low-Arousal) Trials")
+
+# Visualize Experiment 2 correlation with arousal
+n = length(unique(BR_data2$SubjectCode))
+n_quant = 10
+qvec = quantile(BR_data2$Delta_Aro_rating,probs=seq(0,1,1/n_quant),na.rm=TRUE, include.lowest = TRUE, labels = 1:n_quant)
+BR_data2$Delta_Aro_rating_quantiles = cut(BR_data2$Delta_Aro_rating,breaks = qvec, include.lowest = TRUE)
+BR_data2$Delta_Aro_rating_q_num = as.numeric(BR_data2$Delta_Aro_rating_quantiles )
+BR_data2_by_quantiles = data.frame(row.names = 1:n_quant)
+BR_data2_by_quantiles$Q = 1:n_quant
+BR_data2_by_quantiles$DiffFraction.M = with(data =BR_data2,tapply(DiffFraction, Delta_Aro_rating_quantiles,mean, na.rm=TRUE))
+BR_data2_by_quantiles$DiffFraction.SD = with(data =BR_data2,tapply(DiffFraction, Delta_Aro_rating_quantiles,sd, na.rm=TRUE))
+BR_data2_by_quantiles$DiffFraction.SE =  BR_data2_by_quantiles$DiffFraction.SD/sqrt(n)
+BR_data2_by_quantiles$lower = BR_data2_by_quantiles$DiffFraction.M - BR_data2_by_quantiles$DiffFraction.SE
+BR_data2_by_quantiles$upper = BR_data2_by_quantiles$DiffFraction.M + BR_data2_by_quantiles$DiffFraction.SE
+
+
+ggplot(data = BR_data2_by_quantiles, aes(x = Q, y = DiffFraction.M) )+
+  geom_point(stat = 'identity') +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .2) +
+  geom_smooth(data = subset(BR_data2,ValidTrials & !is.na(Delta_Aro_rating)), aes(x=Delta_Aro_rating_q_num, y = DiffFraction),method = "lm", color = "blue") +
+  scale_x_continuous(breaks = 1:n_quant, name = "Decile") +
+  labs(y = "High-Value Predominance Over Low-Value") +
+  ggtitle("Predominance score - by arousal deciles") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
 
