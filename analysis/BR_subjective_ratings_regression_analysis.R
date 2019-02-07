@@ -166,7 +166,7 @@ ggplot(data = BR_data2_by_quantiles, aes(x = Q, y = DiffFraction.M) )+
   geom_point(stat = 'identity') +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = .2) +
   geom_smooth(data = subset(BR_data2,ValidTrials & !is.na(Delta_Aro_rating)), aes(x=Delta_Aro_rating_q_num, y = DiffFraction),method = "lm", color = "blue") +
-  scale_x_continuous(breaks = 1:n_quant, name = "Decile") +
+  scale_x_continuous(breaks = 1:n_quant, name = "Arousal Decile") +
   labs(y = "High-Value Predominance Over Low-Value") +
   ggtitle("Predominance score - by arousal deciles") +
   theme_bw() +

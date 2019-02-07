@@ -160,8 +160,8 @@ for (experiment_num in 1:length(experiment_names)) {
     ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
   
     bar_plot = ggplot(SummaryTable, aes(x=TrialType2, y=Mean_difference, fill = TrialType2)) + 
-      # facet_wrap(~Measurement, scales = 'free', nrow = num_rows ) +
-      geom_dotplot(data = Data_by_sub, aes(y = value, x = TrialType2), binaxis='y', stackdir='center', dotsize =.3) +
+      facet_wrap(~Measurement, scales = 'free', nrow = num_rows ) +
+      #geom_dotplot(data = Data_by_sub, aes(y = value, x = TrialType2), binaxis='y', stackdir='center', dotsize =.3) +
       geom_bar(stat="identity", size =.2, color =1, width=.5) +
       geom_hline(yintercept=0, linetype="dashed", size =1, color =1) +
       theme_bw() +

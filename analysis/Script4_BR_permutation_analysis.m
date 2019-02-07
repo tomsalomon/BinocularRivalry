@@ -45,11 +45,11 @@ end
 measurement_type_names={'Predominance score','Average dominance duration','Percepts after fusion','Initial percept'};
 
 differences={BR_data.Stim1Fraction-0.5,...
-    BR_data.Stim1Time-BR_data.Stim2Time,...
+    BR_data.Stim1Time./(BR_data.Stim1Quantity)-BR_data.Stim2Time./BR_data.Stim2Quantity,...
     BR_data.Stim1Quantity-BR_data.Stim2Quantity,...
     BR_data.InitialStim1-0.5}; % under H0, all diff should be 0 mean
-Stim1_measurement={BR_data.Stim1Fraction, BR_data.Stim1Time, BR_data.Stim1Quantity, BR_data.InitialStim1};
-Stim2_measurement={BR_data.Stim2Fraction, BR_data.Stim2Time, BR_data.Stim2Quantity, 1-BR_data.InitialStim1};
+Stim1_measurement={BR_data.Stim1Fraction, BR_data.Stim1Time./BR_data.Stim1Quantity, BR_data.Stim1Quantity, BR_data.InitialStim1};
+Stim2_measurement={BR_data.Stim2Fraction, BR_data.Stim2Time./BR_data.Stim2Quantity, BR_data.Stim2Quantity, 1-BR_data.InitialStim1};
 
 num_measurements=length(measurement_type_names);
 num_TrialTypes=numel(trialtypenames);
@@ -105,7 +105,10 @@ for trialtype=1:length(trialtypenames)
         diff_means{trialtype,measurement_type}=nanmean(diff_mat);
         Stim1_means{trialtype,measurement_type}=nanmean(Stim1_mat);
         Stim2_means{trialtype,measurement_type}=nanmean(Stim2_mat);
-        
+        if measurement_type==2 % deal with the fact some trials have NA 
+            diff_means{trialtype,measurement_type} = Stim1_means{trialtype,measurement_type} - Stim2_means{trialtype,measurement_type};
+        end
+            
         subplot(1,length(measurement_type_names),measurement_type)
         summary_table.p(ind)=sign_flip_permutation_test(diff_means{trialtype,measurement_type}, true, false, 1, num_permutations);
         if trialtype<=2
