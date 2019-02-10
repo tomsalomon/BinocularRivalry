@@ -72,22 +72,28 @@ for (experiment_num in 1:length(experiment_names)) {
   BR_data$Delta_Val_rating=BR_data$Val1_Ranking-BR_data$Val2_Ranking
   BR_data$Delta_Aro_rating=BR_data$Aro1_Ranking-BR_data$Aro2_Ranking
   BR_data$DiffFraction = (BR_data$Stim1Fraction - 0.5) #   BR_data$DiffFraction = (BR_data$Stim1Fraction - BR_data$Stim2Fraction)
-  BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
+  BR_data$AverageDominance1 = BR_data$Stim1Time / BR_data$Stim1Quantity 
+  BR_data$AverageDominance2 = BR_data$Stim2Time / BR_data$Stim2Quantity 
+  BR_data$DiffTime = BR_data$AverageDominance1 - BR_data$AverageDominance2
   BR_data$DiffQuantity = (BR_data$Stim1Quantity - BR_data$Stim2Quantity)
   measurement_names = c('DiffFraction','DiffTime','DiffQuantity','InitialStim1')
+  
   
   # -------- Run Models
   for (TrialType_i in 1:max(BR_data$TrialType)){
     for (measurement_i in 1:4) {
       model_i = model_i+1
       measurement_name = measurement_names [measurement_i]
+      
       if (experiment_num ==1) { # Subjective value in experiment 1
-        #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 + Delta_Val_rating|SubjectCode)")) # with random slopes
-        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating + (1 |SubjectCode)"))
+        # Uncomment here for a model without / with random slopes
+        #model_formula = formula(paste0(measurement_name, " ~ 1  + scale(Delta_Val_rating) + (1 |SubjectCode)"))
+        model_formula = formula(paste0(measurement_name, " ~ 1  + scale(Delta_Val_rating) + (1 + scale(Delta_Val_rating) |SubjectCode)"))
       } else if (experiment_num >=2) {  # Subjective value and arousal in experiments 2 and 3
-        #model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 + Delta_Val_rating + Delta_Aro_rating|SubjectCode)")) # with random slopes
-        model_formula = formula(paste0(measurement_name, " ~ 1  + Delta_Val_rating * Delta_Aro_rating + (1 |SubjectCode)"))
+        #model_formula = formula(paste0(measurement_name, " ~ 1  + scale(Delta_Val_rating) * scale(Delta_Aro_rating) + (1 |SubjectCode)"))
+        model_formula = formula(paste0(measurement_name, " ~ 1  + scale(Delta_Val_rating) * scale(Delta_Aro_rating) + (1 + scale(Delta_Val_rating) * scale(Delta_Aro_rating)|SubjectCode)"))
       }
+      
       if (measurement_i <=3) { # Continuous dependent variables
         models[[model_i]] = lmer(model_formula, data=subset(BR_data,ValidTrials & TrialType==TrialType_i), na.action=na.omit)
       } else if (measurement_i ==4) { # Binomial dependent variable - is stim1 first percept
@@ -123,6 +129,32 @@ summary_df$asterisk[summary_df$p < .001] = "***"
 
 View(summary_df)
 
+# Additional Tests and measurements -------
+
+# Experiment 2
+# Visualize arousal effect
+BR_data2$Aro_groups <- cut(BR_data2$Delta_Aro_rating, breaks = 3) %>% factor(., labels = c("small", "average", "large"))
+BR_data2$Val_groups <- cut(BR_data2$Delta_Val_rating, breaks = 3) %>% factor(., labels = c("small", "average", "large"))
+# run the models with all scaled factors to get beta values
+summary(lmer(scale(DiffFraction) ~ 1  + scale(Delta_Aro_rating) + (1 + scale(Delta_Aro_rating) |SubjectCode),na.action = na.omit,data = BR_data2))
+dev.new()
+ggplot(BR_data2,aes(x = Delta_Aro_rating, y = DiffFraction, color = Val_groups)) +
+  geom_point(size = .9, alpha = .3) +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  #scale_color_brewer(type = "qual", palette = 3) +
+  labs(x = "Arousal Differences", y = "Predominance Score", color = "Subjective Value Difference")
+
+summary(lmer(scale(DiffTime) ~ 1  + scale(Delta_Val_rating) * scale(Delta_Aro_rating) + (1 |SubjectCode),na.action = na.omit,data = BR_data2))
+ggplot(BR_data2,aes(x = Delta_Aro_rating, y = DiffTime, color = Val_groups)) +
+  geom_point(size = .9, alpha = .3) +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  #scale_color_brewer(type = "qual", palette = 3) +
+  labs(x = "Arousal Differences", y = "Predominance Score", color = "Subjective Value Difference")
+
+
+
 # miss-match of subjetive ratings and manipulation:
 missmatch_value = sum(BR_data$Delta_Val_rating[BR_data$TrialType<=2 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType<=2 & BR_data$ValidTrials==1)
 missmatch_arousal = sum(BR_data$Delta_Aro_rating[BR_data$TrialType>=3 & BR_data$ValidTrials==1]<=0) / sum(BR_data$TrialType>=3 & BR_data$ValidTrials==1)
@@ -130,7 +162,9 @@ missmatch_arousal = sum(BR_data$Delta_Aro_rating[BR_data$TrialType>=3 & BR_data$
 # Test prediction of condition 2 (Value | low arousal) which was not significant using the other measurement
 options(warn=-1)
 BR_data_agg=as.data.frame(aggregate(BR_data,by=list(BR_data$SubjectCode,BR_data$TrialType), mean, na.rm=TRUE))
+BR_data_agg$DiffTime = BR_data_agg$Stim1Time - BR_data_agg$Stim2Time 
 Data_by_sub=melt(BR_data_agg,id = c("SubjectInd", "TrialType") ,measurement_names)
+BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
 options(warn=0)
 colnames(Data_by_sub)[ncol(Data_by_sub)-1] = "Measurement"
 levels(Data_by_sub$Measurement) = c("Predominance Score", "Dominance Duration", "Percepts After Fusion", "Initial Percept")
@@ -141,13 +175,12 @@ colnames(PDS_data)= paste0("Cond",(1:ncol(PDS_data)))
 my_model = lm(Cond2 ~ -1 + Cond1 + Cond3 + Cond4, data = PDS_data)
 print(summary(lm.beta(my_model)))
 PDS_data$prediction = my_model$fitted.values
-dev.new()
-ggplot (PDS_data, aes(x= prediction, y = Cond2)) +
+Pred_cond2_plot = ggplot (PDS_data, aes(x= prediction, y = Cond2)) +
   geom_point() + geom_smooth(method = "lm") +
   xlab("Model prediction") + ylab("Actual dominance") +
   ggtitle("Predicted Dominance in (Value | Low-Arousal) Trials")
 
-# Visualize Experiment 2 correlation with arousal
+
 n = length(unique(BR_data2$SubjectCode))
 n_quant = 10
 qvec = quantile(BR_data2$Delta_Aro_rating,probs=seq(0,1,1/n_quant),na.rm=TRUE, include.lowest = TRUE, labels = 1:n_quant)
@@ -161,7 +194,7 @@ BR_data2_by_quantiles$DiffFraction.SE =  BR_data2_by_quantiles$DiffFraction.SD/s
 BR_data2_by_quantiles$lower = BR_data2_by_quantiles$DiffFraction.M - BR_data2_by_quantiles$DiffFraction.SE
 BR_data2_by_quantiles$upper = BR_data2_by_quantiles$DiffFraction.M + BR_data2_by_quantiles$DiffFraction.SE
 
-
+dev.new()
 ggplot(data = BR_data2_by_quantiles, aes(x = Q, y = DiffFraction.M) )+
   geom_point(stat = 'identity') +
   geom_errorbar(aes(ymin = lower, ymax = upper), width = .2) +
@@ -172,3 +205,40 @@ ggplot(data = BR_data2_by_quantiles, aes(x = Q, y = DiffFraction.M) )+
   theme_bw() +
   theme(plot.title = element_text(hjust = 0.5))
 
+# Exepriment 3 validate subjective Value and arousal
+data_tmp1 = BR_data3[,c('SubjectCode','Stim1Name','Val1_Ranking','Aro1_Ranking')]
+data_tmp2 = BR_data3[,c('SubjectCode','Stim2Name','Val2_Ranking','Aro2_Ranking')]
+colnames(data_tmp2) = colnames(data_tmp1)
+data_tmp = rbind(data_tmp1,data_tmp2)
+data_tmp = data_tmp[!duplicated(data_tmp[,c('SubjectCode', 'Stim1Name')]),] # remove duplicate cases
+HV_stim = unique(BR_data$Stim1Name[BR_data3$TrialType<=2])
+HA_stim = unique(BR_data$Stim1Name[BR_data3$TrialType>=3])
+
+data_tmp$is_HV = data_tmp$Stim1Name %in% HV_stim
+data_tmp$is_HA = data_tmp$Stim1Name %in% HA_stim
+arousal_model = lmer(Val1_Ranking ~ 1 + is_HV + (1| SubjectCode), data = data_tmp)
+
+summary(lmer(scale(is_HV) ~ -1 + scale(Val1_Ranking) + (-1 + scale(Val1_Ranking)| SubjectCode) , data = data_tmp))
+summary(lmer(scale(is_HA) ~ -1 + scale(Aro1_Ranking) + (-1 + scale(Aro1_Ranking)| SubjectCode) , data = data_tmp))
+
+summary(glmer(is_HV ~ -1 + scale(Val1_Ranking) + (-1 + scale(Val1_Ranking)| SubjectCode) , data = data_tmp, family = binomial))
+summary(glmer(is_HA ~ -1 + scale(Aro1_Ranking) + (-1 + scale(Aro1_Ranking)| SubjectCode) , data = data_tmp, family = binomial))
+
+subs = (unique(data_tmp$SubjectCode))
+b0=c()
+b1=c()
+for (sub_i in  1:length(subs)){
+  model = lm(scale(is_HV) ~ 1 + scale(Val1_Ranking) , data = subset(data_tmp,SubjectCode == subs[sub_i]))
+  # model = glm(is_HV ~ 1 + scale(Val1_Ranking) , data = subset(data_tmp,SubjectCode == subs[sub_i]), family = binomial)
+  b0=c(b0,model$coefficients[1])
+  b1=c(b1,model$coefficients[2])
+}
+
+b0=c()
+b1=c()
+for (sub_i in  1:length(subs)){
+  model = lm(scale(is_HA) ~ 1 + scale(Aro1_Ranking) , data = subset(data_tmp,SubjectCode == subs[sub_i]))
+  # model = glm(is_HV ~ 1 + scale(Val1_Ranking) , data = subset(data_tmp,SubjectCode == subs[sub_i]), family = binomial)
+  b0=c(b0,model$coefficients[1])
+  b1=c(b1,model$coefficients[2])
+}

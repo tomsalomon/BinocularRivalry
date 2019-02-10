@@ -64,13 +64,15 @@ for (experiment_num in 1:length(experiment_names)) {
   
   # Dependent variable: High stimulus (stim1) dominance
   BR_data$DiffFraction = (BR_data$Stim1Fraction - 0.5)
-  BR_data$DiffTime = (BR_data$Stim1Time - BR_data$Stim2Time)
+  BR_data$AverageDominance1 = BR_data$Stim1Time / BR_data$Stim1Quantity # to calculate DiffTime later
+  BR_data$AverageDominance2 = BR_data$Stim2Time / BR_data$Stim2Quantity 
   BR_data$DiffQuantity = (BR_data$Stim1Quantity - BR_data$Stim2Quantity)
   BR_data$DiffInitial = BR_data$InitialStim1 - 0.5
   measurement_names = c('DiffFraction','DiffTime','DiffQuantity','DiffInitial')
   
   options(warn=-1)
   BR_data_agg=as.data.frame(aggregate(BR_data,by=list(BR_data$SubjectCode,BR_data$TrialType), mean, na.rm=TRUE))
+  BR_data_agg$DiffTime = BR_data_agg$Stim1Time - BR_data_agg$Stim2Time 
   Data_by_sub=melt(BR_data_agg,id = c("SubjectInd", "TrialType") ,measurement_names)
   options(warn=0)
   colnames(Data_by_sub)[ncol(Data_by_sub)-1] = "Measurement"
@@ -156,21 +158,22 @@ for (experiment_num in 1:length(experiment_names)) {
     geom_text(parse = TRUE,data = SummaryTable, aes(y = yloc*1.1, label = non_significant, fontface=3),size = 3) + 
     labs( x = x_lab, y = y_lab) +
     # theme(axis.title.x=element_blank(), axis.title.y=element_blank()) + # remove x and y labs
-    scale_fill_grey(start = 0.9, end = .5)
+    scale_fill_grey(start = 0.9, end = .5) +
     ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
   
     bar_plot = ggplot(SummaryTable, aes(x=TrialType2, y=Mean_difference, fill = TrialType2)) + 
       facet_wrap(~Measurement, scales = 'free', nrow = num_rows ) +
       #geom_dotplot(data = Data_by_sub, aes(y = value, x = TrialType2), binaxis='y', stackdir='center', dotsize =.3) +
+      geom_point(data = Data_by_sub, aes(y = value, x = TrialType2), size =.5, alpha = .3) +
       geom_bar(stat="identity", size =.2, color =1, width=.5) +
       geom_hline(yintercept=0, linetype="dashed", size =1, color =1) +
       theme_bw() +
       geom_errorbar( width=.2, aes(ymin=CI_lower, ymax=CI_upper))  + # add error bar of 95% CI
-      geom_blank(aes(y=yloc2*(-1))) + # will set 0 at the middle with facet_wrap free scale
-      geom_blank(aes(y=yloc2))+ # will set 0 at the middle with facet_wrap free scale
+      geom_blank(data = Data_by_sub,aes(y=value*(-1))) + # will set 0 at the middle with facet_wrap free scale
+      geom_blank(data = Data_by_sub,aes(y=value))+ # will set 0 at the middle with facet_wrap free scale
       theme(aspect.ratio=2/num_rows, legend.position="none") + 
-      geom_text(parse = TRUE, aes(y = yloc2, label = asterisk),size = 10) +
-      geom_text(parse = TRUE, aes(y = yloc2*1.1, label = non_significant, fontface=3),size = 3) + 
+      geom_text(parse = TRUE, aes(y = yloc, label = asterisk),size = 10) +
+      geom_text(parse = TRUE, aes(y = yloc*1.1, label = non_significant, fontface=3),size = 3) + 
       labs( x = x_lab, y = y_lab) +
       scale_fill_grey(start = .9, end = .5) +
       ggtitle(experiment_name_full) + theme(plot.title = element_text(hjust = 0.5))
