@@ -6,10 +6,10 @@ clear;
 rng(1); % for reproducability
 
 % Define these variables:
-experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 4; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS', 4 - 'BR_IAPS replication'
 analysis_path = pwd;
 data_path = [analysis_path,'/processed_data'];
-experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
+experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS', 'BR_IAPS_II'}; % One of three options
 save_summary_table = true; % change to true to save summary table in the data folder
 num_permutations = 200000;
 
@@ -36,7 +36,7 @@ BR_data.trialtype(BR_data.Delta_Aro==0 & BR_data.IsHighAro==1) = 1; % High Arous
 BR_data.trialtype(BR_data.Delta_Aro==0 & BR_data.IsHighAro==0) = 2; % Low Arousal - Different Value
 BR_data.trialtype(BR_data.Delta_Val==0 & BR_data.IsHighVal==1) = 3; % High Value - Different Arousal
 BR_data.trialtype(BR_data.Delta_Val==0 & BR_data.IsHighVal==0) = 4; % Low Value - Different Arousal
-if experiment_num==3
+if experiment_num>=3
     trialtypenames={'High Arousal: Different Value','Low Arousal: Different Value','High Value: Different Arousal','Low Value: Different Arousal'};
 else
     trialtypenames={[strrep(experiment_name,'_',' '),': Different Value']};
@@ -160,7 +160,7 @@ disp(summary_table)
 if save_summary_table
     writetable(summary_table,[data_path,'/SummaryTable_',experiment_name,'.txt'],'delimiter','\t')
 end
-if experiment_num==3
+if experiment_num>=3
     corrmat = cell(num_measurements,1);
     betas_i = cell(num_measurements,num_TrialTypes);
     multiple_r_square = nan(num_measurements,num_TrialTypes);

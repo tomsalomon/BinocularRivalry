@@ -15,7 +15,7 @@
 %       'Arousal' in Experiment 2. discrete scale from 0 - 10
 %       'Arousal scale' in Experiment 3. continuous scale from 0 - 10
 % output_path - where the processed merged data file will be saved
-% experiment_num - the experiment to analyze: 1 - 'BR_Celebrities', 2 - 
+% experiment_num - the experiment to analyze: 1 - 'BR_Celebrities', 2 -
 % 'BR_Politicians', 3 - 'BR_IAPS'
 % ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,10 +23,10 @@
 %% Initialize code - define paths and pre-allocation
 clear;
 % Define these variables
-experiment_num = 2; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 4; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 num_of_trials=64; % number of trials in experiment (64 in all three experiments)
 
-experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
+experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS','BR_IAPS_II'}; % One of three options
 experiment_name = experiment_names{experiment_num};
 analysis_path=pwd;
 experiment_path = [analysis_path,'/../',experiment_name];
@@ -57,15 +57,36 @@ for sub_i= 1:length(subjects)  % running subject. notice: subject's ID is not su
     subject_dir=dir([BR_raw_data_folder,'/',subjects{sub_i},'/*Sub*']); %struct with dated folder name
     subject_with_date = subject_dir.name; %subject name and date for full path
     subject_path= [subject_dir.folder,'/',subject_with_date,'/'];
-    [~,~,BR_params_default] = xlsread([subject_path,'from laptop/BR_params_default.xlsx'],'Pairs'); % read excel with info about the stimuli in each trial
-    BR_params = cell2table(BR_params_default(2:end,:),'VariableName',BR_params_default(1,:));
-    stimuli_pairs{sub_i} = BR_params;
+    if experiment_num==4
+        pairs = readtable([subject_path,'fromlaptop/pairs.txt']);
+        % remove after sub01
+        try
+            pairs.StimA = pairs.stimA  ;
+            pairs.StimB = pairs.stimB;
+            stim_A_category = cellfun(@(x) str2double(x(1)),pairs.StimA);
+            stim_B_category = cellfun(@(x) str2double(x(1)),pairs.StimB);
+            pairs.Val_A = ismember(stim_A_category,[1:2]);
+            pairs.Aro_A  = ismember(stim_A_category,[1,3]);
+            pairs.Val_B = ismember(stim_B_category,[1:2]);
+            pairs.Aro_B  = ismember(stim_B_category,[1,3]);
+        catch
+        end
+        stimuli_pairs{sub_i} = pairs;
+    else
+        [~,~,BR_params_default] = xlsread([subject_path,'from laptop/BR_params_default.xlsx'],'Pairs'); % read excel with info about the stimuli in each trial
+        BR_params = cell2table(BR_params_default(2:end,:),'VariableName',BR_params_default(1,:));
+        stimuli_pairs{sub_i} = BR_params;
+    end
     clear('subject_data');
     try
         load([tmp_data_path,subject_with_date,'.mat']); %try loading 'subject data' if data was already analyzed
         experiment_data(sub_i,:)=subject_data;
     catch % if subject was not previously analyzed, calculate and save for future use
-        excel_files = dir([subject_path,'/from laptop/rivalry_pair_*.xlsx']); %lists files in subject's folder
+        if experiment_num ==4
+            excel_files = dir([subject_path,'/fromlaptop/rivalry_pair_*.xlsx']); %lists files in subject's folder
+        else
+            excel_files = dir([subject_path,'/from laptop/rivalry_pair_*.xlsx']); %lists files in subject's folder
+        end
         for excel_Ind=1:numel(excel_files) %going through the excel files (24/48/64...)
             excel_file = [excel_files(excel_Ind).folder,'/',excel_files(excel_Ind).name];
             % experiment_data{sub_i,excel_Ind} = xlsread(excel_file,'Default');

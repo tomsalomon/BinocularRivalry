@@ -1,0 +1,86 @@
+% This script reads the the subjective ratings of IAPS stimuli used in
+% Experiment 3 and shows their descriptive statistic
+%
+% Scripts that need to run prior to this one:
+% ------------------------------------------
+% * 'Script1_merge_BR_data.m' - combine individual participants data into one
+%   table per experiment
+% *	'Script2_SubjectsValidity.m' - define valid participants to be included
+%   in the analysis
+%
+% ~~~~~~~~~~~~~~~~~~~~~~~~ Written by Tom Salomon ~~~~~~~~~~~~~~~~~~~~~~~~
+% ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ December, 2018 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+%% Initialize code - define paths and pre-allocation
+clear;
+% Define these variables
+experiment_num = 4; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+num_of_stimuli=16; % number of stimuli used in the experiment
+stim_names = {'couple_1','couple_2','wind_surfer','waves_surfer',... % 1 - High-Value High-Arousal
+    'family','elderly_couple','couple_on_bicycle','girl',... % 2 - High-Value Low-Arousal
+    'crime_3','crime_2','crime_1','car_accident',... % 3 - Low-Value High-Arousal
+    'old_man','woman','man_in_jail','cemetery'}; % 4 - Low-Value Low-Arousal
+stim_type = repmat(1:4,[4,1]);
+stim_type=stim_type(:);
+stim_type_names = {'High-Value High-Arousal','High-Value Low-Arousal','Low-Value High-Arousal','Low-Value Low-Arousal'};
+
+experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
+experiment_name = experiment_names{experiment_num};
+analysis_path=pwd;
+experiment_path = [analysis_path,'/../',experiment_name];
+data_path = [analysis_path,'/processed_data'];
+behav_data_folder=([experiment_path,'/Behavioral_Data/']);
+data_file_options = dir(sprintf('%s/BR_data_%s*',data_path,experiment_name));
+if length(data_file_options)>1
+    data_file_selection = listdlg('PromptString','Select a data file:','SelectionMode','single','ListString',{data_file_options.name},'ListSize',[500,400]);
+else
+    data_file_selection = 1;
+end
+data_file=data_file_options(data_file_selection).name;
+
+% remove invalid subject
+valid_subjects = csvread(sprintf('%s/valid_subjects_%s',data_path,data_file));
+invalid_subjects = csvread(sprintf('%s/invalid_subjects_%s',data_path,data_file));
+num_of_subjects = length(valid_subjects);
+
+% pre-allocation
+[value_mat,arousal_mat]=deal(nan(num_of_subjects,num_of_stimuli)); % mat where numerical results will be written
+
+%% Loading data from behavioral file to MATLAB cell variable
+%h = waitbar(0,'Reading raw data into MATLAB');
+for sub_i= 1:num_of_subjects  % running subject. notice: subject's ID is not subject's index
+    subject_code = valid_subjects(sub_i);
+    sub_name = sprintf('Sub_%02i',subject_code);
+    value_file = dir([behav_data_folder,sub_name,'*ScaleRanking_Value*.txt']);
+    arousal_file = dir([behav_data_folder,sub_name,'*ScaleRanking_Arousal*.txt']);
+    
+    value_data_tmp = readtable([behav_data_folder,value_file.name]);
+    arousal_data_tmp = readtable([behav_data_folder,arousal_file.name]);
+    
+    value_data_tmp.Name = strrep(value_data_tmp.Name,'.jpg',''); % remove '.jpg' ending
+    arousal_data_tmp.Name = strrep(arousal_data_tmp.Name,'.jpg',''); % remove '.jpg' ending
+    
+    for stim_i = 1:num_of_stimuli
+        stim_index_in_value_data = ismember(value_data_tmp.Name, stim_names{stim_i});
+        stim_index_in_arousal_data = ismember(arousal_data_tmp.Name, stim_names{stim_i});
+        value_mat(sub_i,stim_i) = value_data_tmp.Bid(stim_index_in_value_data);
+        arousal_mat(sub_i,stim_i) = arousal_data_tmp.Bid(stim_index_in_arousal_data);
+    end
+end
+mean(value_mat)
+mean(arousal_mat)
+summary_mat = [mean(value_mat)',std(value_mat)',mean(arousal_mat)',std(arousal_mat)'];
+summary_table = array2table(summary_mat,'VariableNames',{'M_Value','SD_Value','M_Arousal','SD_Arousal'});
+summary_table.StimName = stim_names';
+summary_table.StimType = stim_type;
+
+disp(summary_table);
+
+summary_mat2 = nan(max(stim_type),2);
+for stimtype_i = 1:max(stim_type)
+    summary_mat2(stimtype_i,1) = mean(summary_table.M_Value(summary_table.StimType==stimtype_i));
+    summary_mat2(stimtype_i,2) = mean(summary_table.M_Arousal(summary_table.StimType==stimtype_i));
+end
+summary_table2 = array2table(summary_mat2,'VariableNames',{'M_Value','M_Arousal'});
+summary_table2.StimType = stim_type_names';
+disp(summary_table2)

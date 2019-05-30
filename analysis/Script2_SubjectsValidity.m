@@ -78,7 +78,7 @@ valid_subjects=summary_valid(summary_valid(:,6)==1,1);
 invalid_subjects=summary_valid(summary_valid(:,6)==0,1);
 
 summary_corrupted_valid_participants = mean(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end),2);
-summary_allfusion_valid_participants = mean(summary_corrupted(ismember(summary_corrupted(:,1),valid_subjects),2:end),2);
+summary_allfusion_valid_participants = mean(summary_allfusion(ismember(summary_allfusion(:,1),valid_subjects),2:end),2);
 iscorrupted_mean = mean(summary_corrupted_valid_participants);
 iscorrupted_sd = std(summary_corrupted_valid_participants);
 allfusion_mean = mean(summary_allfusion_valid_participants);

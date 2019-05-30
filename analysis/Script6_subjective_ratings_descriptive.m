@@ -14,7 +14,7 @@
 %% Initialize code - define paths and pre-allocation
 clear;
 % Define these variables
-experiment_num = 3; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
+experiment_num = 4; % Experiment number to be analyzed: 1 - 'BR_Celebrities', 2 - 'BR_Politicians', 3 - 'BR_IAPS'
 num_of_stimuli=16; % number of stimuli used in the experiment
 stim_names = {'couple_1','couple_2','wind_surfer','waves_surfer',... % 1 - High-Value High-Arousal
     'family','elderly_couple','couple_on_bicycle','girl',... % 2 - High-Value Low-Arousal
@@ -24,7 +24,7 @@ stim_type = repmat(1:4,[4,1]);
 stim_type=stim_type(:);
 stim_type_names = {'High-Value High-Arousal','High-Value Low-Arousal','Low-Value High-Arousal','Low-Value Low-Arousal'};
 
-experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS'}; % One of three options
+experiment_names = {'BR_Celebrities','BR_Politicians','BR_IAPS','BR_IAPS_II'}; % One of three options
 experiment_name = experiment_names{experiment_num};
 analysis_path=pwd;
 experiment_path = [analysis_path,'/../',experiment_name];
@@ -50,7 +50,11 @@ num_of_subjects = length(valid_subjects);
 %h = waitbar(0,'Reading raw data into MATLAB');
 for sub_i= 1:num_of_subjects  % running subject. notice: subject's ID is not subject's index
     subject_code = valid_subjects(sub_i);
+    if experiment_num == 3
     sub_name = sprintf('Sub_%02i',subject_code);
+    elseif experiment_num == 4
+            sub_name = sprintf('Sub_%03i',subject_code);
+    end
     value_file = dir([behav_data_folder,sub_name,'*ScaleRanking_Value*.txt']);
     arousal_file = dir([behav_data_folder,sub_name,'*ScaleRanking_Arousal*.txt']);
     

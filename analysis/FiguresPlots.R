@@ -3,7 +3,7 @@
 library("rstudioapi") # to define current working directory
 library("ggplot2") # plot package
 library("dplyr")
-library("reshape")
+library("reshape2")
 library("gridExtra")
 library("stats") # adjustment for multiple comparisons
 
@@ -15,7 +15,7 @@ pwd = dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(pwd)
 data_path = paste0(pwd,'/processed_data/')
 output_path = paste0(pwd,'/figures/')
-experiment_names = c('BR_Celebrities','BR_Politicians','BR_IAPS') 
+experiment_names = c('BR_Celebrities','BR_Politicians','BR_IAPS','BR_IAPS_II') 
 
 for (experiment_num in 1:length(experiment_names)) {
   # Read external data
@@ -58,7 +58,7 @@ for (experiment_num in 1:length(experiment_names)) {
   BR_data$TrialType[BR_data$Delta_Val==0 & BR_data$IsHighVal==1] = 3 # High Value - Different Arousal (Exp 3)
   BR_data$TrialType[BR_data$Delta_Val==0 & BR_data$IsHighVal==0] = 4 # Low Value - Different Arousal (Exp 3)
   BR_data$TrialType2=as.factor(BR_data$TrialType)
-  if (experiment_num ==3) {
+  if (experiment_num >=3) {
     levels(BR_data$TrialType2)=c('High Arousal: Different Value','Low Arousal: Different Value','High Value: Different Arousal','Low Value: Different Arousal')
   } else { levels(BR_data$TrialType2)=c("") }
   
@@ -77,7 +77,7 @@ for (experiment_num in 1:length(experiment_names)) {
   options(warn=0)
   colnames(Data_by_sub)[ncol(Data_by_sub)-1] = "Measurement"
   Data_by_sub$TrialType2=as.factor(Data_by_sub$TrialType)
-  if (experiment_num ==3) {
+  if (experiment_num >=3) {
     levels(Data_by_sub$TrialType2)=c('Value |\nHigh Aro.','Value |\nLow Aro.','Arousal |\nHigh Val.','Arousal |\nLow Val.')
     #levels(Data_by_sub$TrialType2)=c('Value |\nHigh Arousal','Value |\nLow Arousa','Arousal |\nHigh Value','Arousal |\nLow Value')
   } else { levels(Data_by_sub$TrialType2)=c("") }
@@ -121,7 +121,7 @@ for (experiment_num in 1:length(experiment_names)) {
   if (experiment_num<3) {
     y_lab = "High-Value Dominance Over Low-Value "
     x_lab = ""
-  } else if (experiment_num==3) {
+  } else if (experiment_num>=3) {
     y_lab = "High Value/Arousal Dominance Over Low Value/Arousal"
     x_lab = "Manipulated Feature"
   }
